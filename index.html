@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SQL Trainer Platform</title>
+
+<link rel="stylesheet" href="style.css">
+
+<!-- CodeMirror -->
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+
+</head>
+
+<body>
+
+<div class="app-container">
+
+    <!-- Sidebar -->
+
+    <aside class="sidebar">
+
+        <h1>SQL Trainer</h1>
+
+        <div class="section">
+
+            <label>Difficulty</label>
+
+            <select id="difficulty">
+                <option>Beginner</option>
+                <option>Intermediate</option>
+                <option>Advanced</option>
+            </select>
+
+        </div>
+
+        <div class="section">
+
+            <h3>Topics</h3>
+
+            <ul id="topics">
+
+                <li class="active">SELECT</li>
+                <li>WHERE</li>
+                <li>ORDER BY</li>
+                <li>JOIN</li>
+                <li>GROUP BY</li>
+                <li>HAVING</li>
+                <li>INSERT</li>
+                <li>UPDATE</li>
+                <li>DELETE</li>
+
+            </ul>
+
+        </div>
+
+        <div class="section">
+
+            <h3>Database Tables</h3>
+
+            <ul class="tables">
+
+                <li>Employees</li>
+                <li>Departments</li>
+                <li>Products</li>
+                <li>Customers</li>
+                <li>Orders</li>
+
+            </ul>
+
+        </div>
+
+    </aside>
+
+    <!-- Main Content -->
+
+    <main class="main">
+
+        <header class="topbar">
+
+            <div>
+                <h2>SQL Playground</h2>
+                <p>Run SQL queries against the training database.</p>
+            </div>
+
+            <button id="runBtn">
+                ▶ Run Query
+            </button>
+
+        </header>
+
+        <!-- Exercise Card -->
+
+        <section class="exercise-card">
+
+            <h3>Current Exercise</h3>
+
+            <p id="exerciseText">
+                Select all employees from the Employees table.
+            </p>
+
+            <button id="hintBtn">
+                Show Hint
+            </button>
+
+            <div id="hintBox" class="hidden">
+                Use SELECT * FROM table_name
+            </div>
+
+        </section>
+
+        <!-- Editor -->
+
+        <section class="editor-section">
+
+            <textarea id="sql-editor">
+SELECT * FROM Employees;
+            </textarea>
+
+        </section>
+
+        <!-- Output -->
+
+        <section class="results">
+
+            <h3>Query Results</h3>
+
+            <div id="output">
+                Ready.
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<!-- SQL.js -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.min.js"></script>
+
+<!-- CodeMirror -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js"></script>
+
+<!-- App Scripts -->
+
+<script src="js/database.js"></script>
+<script src="js/exercises.js"></script>
+<script src="js/validator.js"></script>
+<script src="js/app.js"></script>
+
+
+</body>
+</html>
