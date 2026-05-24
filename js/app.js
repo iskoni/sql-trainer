@@ -1,97 +1,172 @@
 /* ==========================
-   SQL TRAINER APP
+SQL TRAINER APP
 ========================== */
 
 let editor;
 
-let currentDifficulty = "Beginner";
-let currentExercise = null;
+let currentDifficulty =
+    "Beginner";
+
+let currentExercise =
+    null;
 
 let score = 0;
 let completed = 0;
 
 let exerciseIndex = 0;
+
 let filteredExercises = [];
 
 /* ==========================
-   STARTUP
+STARTUP
 ========================== */
 
-window.addEventListener("DOMContentLoaded", async () => {
+window.addEventListener(
 
-    await Database.init();
+    "DOMContentLoaded",
 
-    initializeEditor();
-    initializeButtons();
-    initializeTopics();
-    initializeDifficulty();
+    async ()=>{
 
-    loadExerciseSet();
-    loadExercise();
+        await Database.init();
 
-});
+        initializeEditor();
+
+        initializeButtons();
+
+        initializeTopics();
+
+        initializeDifficulty();
+
+        loadExerciseSet();
+
+        loadExercise();
+
+        renderSchema();
+
+    }
+
+);
 
 /* ==========================
-   EDITOR
+EDITOR
 ========================== */
 
-function initializeEditor() {
+function initializeEditor(){
 
-    editor = CodeMirror.fromTextArea(
-        document.getElementById("sql-editor"),
-        {
-            mode: "text/x-sql",
-            theme: "material-darker",
-            lineNumbers: true,
-            matchBrackets: true,
-            smartIndent: true,
-            autofocus: true
+    editor =
+        CodeMirror.fromTextArea(
+
+            document.getElementById(
+                "sql-editor"
+            ),
+
+            {
+
+                mode:"text/x-sql",
+
+                theme:
+                "material-darker",
+
+                lineNumbers:true,
+
+                matchBrackets:true,
+
+                smartIndent:true,
+
+                autofocus:true
+
+            }
+
+        );
+
+}
+
+/* ==========================
+BUTTONS
+========================== */
+
+function initializeButtons(){
+
+    document
+    .getElementById(
+        "runBtn"
+    )
+    .addEventListener(
+        "click",
+        runExercise
+    );
+
+    document
+    .getElementById(
+        "nextBtn"
+    )
+    .addEventListener(
+        "click",
+        nextExercise
+    );
+
+    document
+    .getElementById(
+        "hintBtn"
+    )
+    .addEventListener(
+        "click",
+        toggleHint
+    );
+
+    document
+    .getElementById(
+        "resetBtn"
+    )
+    .addEventListener(
+
+        "click",
+
+        ()=>{
+
+            Database.reset();
+
+            renderSchema();
+
+            loadExercise();
+
+            document
+            .getElementById(
+                "output"
+            )
+            .innerHTML =
+            "Database reset.";
+
         }
+
+    );
+
+    document
+    .getElementById(
+        "toggleSchemaBtn"
+    )
+    .addEventListener(
+        "click",
+        toggleSchema
     );
 
 }
 
 /* ==========================
-   BUTTONS
+EXERCISE SET
 ========================== */
 
-function initializeButtons() {
-
-    document.getElementById("runBtn")
-        .addEventListener("click", runExercise);
-
-    document.getElementById("nextBtn")
-        .addEventListener("click", nextExercise);
-
-    document.getElementById("hintBtn")
-        .addEventListener("click", toggleHint);
-
-    document.getElementById("resetBtn")
-        .addEventListener("click", () => {
-
-            Database.reset();
-            loadExerciseSet();
-            loadExercise();
-
-            document.getElementById("output").innerHTML =
-                "Database reset.";
-
-        });
-
-    document.getElementById("toggleSchemaBtn")
-        .addEventListener("click", toggleSchema);
-
-}
-
-/* ==========================
-   LOAD EXERCISE SET (BY DIFFICULTY)
-========================== */
-
-function loadExerciseSet() {
+function loadExerciseSet(){
 
     filteredExercises =
-        Exercises.filter(ex =>
-            ex.difficulty === currentDifficulty
+
+        Exercises.filter(
+
+            ex =>
+
+            ex.difficulty ===
+            currentDifficulty
+
         );
 
     exerciseIndex = 0;
@@ -99,278 +174,524 @@ function loadExerciseSet() {
 }
 
 /* ==========================
-   LOAD CURRENT EXERCISE
+LOAD EXERCISE
 ========================== */
 
-function loadExercise() {
+function loadExercise(){
 
-    if (!filteredExercises.length) return;
+    if(
+        !filteredExercises.length
+    ){
+
+        return;
+
+    }
 
     currentExercise =
-        filteredExercises[exerciseIndex];
+        filteredExercises[
+            exerciseIndex
+        ];
 
-    renderExercise(currentExercise);
+    renderExercise(
+        currentExercise
+    );
 
-    syncTopicUI(currentExercise.topic);
+    syncTopicUI(
+        currentExercise.topic
+    );
+
 }
+
 /* ==========================
-   RUN EXERCISE
+RENDER EXERCISE
 ========================== */
 
-async function runExercise() {
+function renderExercise(ex){
 
-    const sql = editor.getValue();
+    document
+    .getElementById(
+        "exerciseText"
+    )
+    .textContent =
+        ex.prompt;
 
-    const result = Database.execute(sql);
+    document
+    .getElementById(
+        "hintBox"
+    )
+    .textContent =
+        ex.hint;
 
-    renderExecution(result);
+    document
+    .getElementById(
+        "hintBox"
+    )
+    .classList.add(
+        "hidden"
+    );
+
+    document
+    .getElementById(
+        "difficultyBadge"
+    )
+    .textContent =
+        ex.difficulty;
+
+    document
+    .getElementById(
+        "topicBadge"
+    )
+    .textContent =
+        ex.topic;
+
+    editor.setValue(
+        "-- Write your SQL here"
+    );
+
+}
+
+/* ==========================
+RUN EXERCISE
+========================== */
+
+async function runExercise(){
+
+    const sql =
+        editor.getValue();
+
+    const result =
+        Database.execute(sql);
+
+    renderExecution(
+        result
+    );
 
     const validation =
-        await Validator.validate(currentExercise, sql);
 
-    renderValidation(validation);
+        await Validator
+        .validate(
+
+            currentExercise,
+
+            sql
+
+        );
+
+    renderValidation(
+        validation
+    );
+
 }
 
 /* ==========================
-   EXECUTION OUTPUT
+RESULT PANEL
 ========================== */
 
-function renderExecution(result) {
+function renderExecution(result){
 
     const output =
-        document.getElementById("output");
+        document
+        .getElementById(
+            "output"
+        );
 
-    if (!result.success) {
+    if(
+        !result.success
+    ){
 
         output.innerHTML = `
-        <div class="error">
+
+        <div class="feedback-card feedback-error">
+
             ❌ ${result.error}
-        </div>`;
+
+        </div>
+
+        `;
 
         return;
+
     }
 
-    if (result.data.length === 0) {
+    if(
+        result.data.length===0
+    ){
 
         output.innerHTML = `
-        <div class="success">
+
+        <div class="feedback-card feedback-success">
+
             Query executed.
-        </div>`;
+
+        </div>
+
+        `;
 
         return;
+
     }
 
-    const table = result.data[0];
+    const table =
+        result.data[0];
 
-    let html = `<table class="result-table">`;
+    let html =
+        `<table class="result-table">`;
 
-    html += "<thead><tr>";
+    html +=
+        "<thead><tr>";
 
-    table.columns.forEach(col => {
-        html += `<th>${col}</th>`;
+    table.columns
+    .forEach(col=>{
+
+        html +=
+        `<th>${col}</th>`;
+
     });
 
-    html += "</tr></thead><tbody>";
+    html +=
+        "</tr></thead><tbody>";
 
-    table.values.forEach(row => {
+    table.values
+    .forEach(row=>{
 
         html += "<tr>";
 
-        row.forEach(cell => {
-            html += `<td>${cell}</td>`;
+        row.forEach(cell=>{
+
+            html +=
+            `<td>${cell}</td>`;
+
         });
 
         html += "</tr>";
+
     });
 
-    html += "</tbody></table>";
+    html +=
+        "</tbody></table>";
 
-    output.innerHTML = html;
+    output.innerHTML =
+        html;
+
 }
 
 /* ==========================
-   VALIDATION
+VALIDATION
 ========================== */
 
-function renderValidation(validation) {
+function renderValidation(
+    validation
+){
 
     const output =
-        document.getElementById("output");
+        document
+        .getElementById(
+            "output"
+        );
 
-    if (validation.success) {
+    if(
+        validation.success
+    ){
 
-        score += currentExercise.xp || 10;
+        score +=
+            currentExercise.xp;
+
         completed++;
 
         output.innerHTML += `
-        <div class="success feedback-card feedback-success">
-            ✅ Correct
-            <br><br>
-            ${validation.message}
-            <br><br>
-            XP: +${currentExercise.xp || 10}
-            <br>
-            Score: ${score}
-        </div>`;
 
-    } else {
+        <div class="feedback-card feedback-success">
+
+            ✅ Correct
+
+            <br><br>
+
+            ${validation.message}
+
+            <br><br>
+
+            XP:
+            +${currentExercise.xp}
+
+            <br>
+
+            Score:
+            ${score}
+
+        </div>
+
+        `;
+
+    }
+
+    else{
 
         output.innerHTML += `
-        <div class="error feedback-card feedback-error">
+
+        <div class="feedback-card feedback-error">
+
             ❌ Incorrect
+
             <br><br>
+
             ${validation.message}
-        </div>`;
+
+        </div>
+
+        `;
+
     }
+
 }
 
 /* ==========================
-   NEXT EXERCISE (FIXED)
+NEXT EXERCISE
 ========================== */
 
-function nextExercise() {
+function nextExercise(){
 
     exerciseIndex++;
 
-    if (exerciseIndex >= filteredExercises.length) {
+    if(
+
+        exerciseIndex >=
+        filteredExercises.length
+
+    ){
+
         exerciseIndex = 0;
+
     }
 
     Database.reset();
 
+    renderSchema();
+
     loadExercise();
 
-    document.getElementById("output").innerHTML = "Ready.";
+    document
+    .getElementById(
+        "output"
+    )
+    .innerHTML =
+        "Ready.";
+
 }
 
 /* ==========================
-   DIFFICULTY
+DIFFICULTY
 ========================== */
 
-function initializeDifficulty() {
+function initializeDifficulty(){
 
-    const selector =
-        document.getElementById("difficulty");
+    document
+    .getElementById(
+        "difficulty"
+    )
+    .addEventListener(
 
-    selector.addEventListener("change", (e) => {
+        "change",
 
-        currentDifficulty = e.target.value;
+        e=>{
 
-        loadExerciseSet();
-        loadExercise();
+            currentDifficulty =
+                e.target.value;
 
-    });
+            loadExerciseSet();
+
+            loadExercise();
+
+        }
+
+    );
+
 }
 
 /* ==========================
-   TOPICS
+TOPICS
 ========================== */
 
-function initializeTopics() {
+function initializeTopics(){
 
-    const topics =
-        document.querySelectorAll("#topics li");
+    document
+    .querySelectorAll(
+        "#topics li"
+    )
 
-    topics.forEach(item => {
+    .forEach(li=>{
 
-        item.addEventListener("click", () => {
+        li.addEventListener(
 
-            loadTopicExercise(item.textContent);
+            "click",
 
-        });
+            ()=>{
 
-    });
-}
+                loadTopicExercise(
+                    li.textContent
+                );
 
-/* ==========================
-   TOPIC FILTER
-========================== */
+            }
 
-function loadTopicExercise(topic) {
-
-    const matches =
-        filteredExercises.filter(ex =>
-            ex.topic === topic
         );
 
-    if (!matches.length) return;
+    });
 
-    currentExercise = matches[0];
+}
+
+/* ==========================
+TOPIC FILTER
+========================== */
+
+function loadTopicExercise(
+    topic
+){
+
+    const matches =
+
+        filteredExercises
+        .filter(
+
+            ex =>
+
+            ex.topic ===
+            topic
+
+        );
+
+    if(
+        !matches.length
+    ){
+
+        return;
+
+    }
+
+    currentExercise =
+        matches[0];
 
     exerciseIndex =
-        filteredExercises.indexOf(currentExercise);
 
-    renderExercise(currentExercise);
+        filteredExercises
+        .indexOf(
+            currentExercise
+        );
+
+    renderExercise(
+        currentExercise
+    );
 
     syncTopicUI(topic);
+
 }
 
 /* ==========================
-   TOPIC UI
+TOPIC UI
 ========================== */
 
-function syncTopicUI(topic) {
+function syncTopicUI(
+    topic
+){
 
-    document.querySelectorAll("#topics li")
-        .forEach(li => {
+    document
+    .querySelectorAll(
+        "#topics li"
+    )
 
-            li.classList.toggle(
-                "active",
-                li.textContent === topic
+    .forEach(li=>{
+
+        li.classList.toggle(
+
+            "active",
+
+            li.textContent
+            === topic
+
+        );
+
+    });
+
+}
+
+/* ==========================
+HINT
+========================== */
+
+function toggleHint(){
+
+    document
+    .getElementById(
+        "hintBox"
+    )
+    .classList.toggle(
+        "hidden"
+    );
+
+}
+
+/* ==========================
+SCHEMA
+========================== */
+
+function renderSchema(){
+
+    const list =
+        document
+        .getElementById(
+            "schemaList"
+        );
+
+    list.innerHTML = "";
+
+    Database
+    .getSchema()
+
+    .forEach(row=>{
+
+        const li =
+            document
+            .createElement(
+                "li"
             );
 
-        });
+        li.textContent =
+            row;
+
+        list.appendChild(li);
+
+    });
+
 }
 
-/* ==========================
-   HINT
-========================== */
-
-function toggleHint() {
-
-    document.getElementById("hintBox")
-        .classList.toggle("hidden");
-}
-
-/* ==========================
-   SCHEMA
-========================== */
-function toggleSchema() {
+function toggleSchema(){
 
     const box =
-        document.getElementById("schemaBox");
+        document
+        .getElementById(
+            "schemaBox"
+        );
 
     const btn =
-        document.getElementById("toggleSchemaBtn");
+        document
+        .getElementById(
+            "toggleSchemaBtn"
+        );
 
-    box.classList.toggle("hidden");
+    box.classList.toggle(
+        "hidden"
+    );
 
     btn.textContent =
-        box.classList.contains("hidden")
-        ? "Show Schema"
-        : "Hide Schema";
 
-}
+        box.classList.contains(
+            "hidden"
+        )
 
-/* ==========================
-   HELPER
-========================== */
-function renderExercise(ex) {
+        ?
 
-    document.getElementById("exerciseText")
-        .textContent = ex.prompt;
+        "Show Schema"
 
-    document.getElementById("hintBox")
-        .textContent = ex.hint;
+        :
 
-    document.getElementById("hintBox")
-        .classList.add("hidden");
+        "Hide Schema";
 
-    document.getElementById("difficultyBadge")
-        .textContent = ex.difficulty;
-
-    document.getElementById("topicBadge")
-        .textContent = ex.topic;
-
-    editor.setValue("-- Write your SQL here");
 }

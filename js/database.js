@@ -1,111 +1,212 @@
+/* ==========================
+DATABASE ENGINE
+========================== */
+
 window.Database = {
 
-    db: null,
+    SQL:null,
+    db:null,
 
-    async init(){
+/* ==========================
+INIT
+========================== */
 
-        const SQL = await initSqlJs({
-            locateFile: f =>
-            `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${f}`
-        });
+async init(){
 
-        this.SQL = SQL;
+    const SQL = await initSqlJs({
 
-        this.db = new SQL.Database();
+        locateFile:file =>
 
-        this.seed();
+        `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`
 
-    },
+    });
 
-    reset(){
+    this.SQL = SQL;
 
-        if(this.db){
-            this.db.close();
-        }
+    this.db = new SQL.Database();
 
-        this.db = new this.SQL.Database();
+    this.seed();
 
-        this.seed();
+},
 
-    },
+/* ==========================
+RESET DATABASE
+========================== */
 
-    seed(){
+reset(){
 
-        this.db.run(`
+    if(this.db){
 
-/* =========================
-   CORE TABLES
-========================= */
+        this.db.close();
+
+    }
+
+    this.db =
+        new this.SQL.Database();
+
+    this.seed();
+
+},
+
+/* ==========================
+SCHEMA METADATA
+========================== */
+
+getSchema(){
+
+    return [
+
+        "Departments(id, name)",
+
+        "Employees(id, name, salary, department_id)",
+
+        "Customers(id, name, city)",
+
+        "Categories(id, name)",
+
+        "Products(id, name, price, category_id)",
+
+        "Orders(id, customer_id, product_id, quantity)",
+
+        "Suppliers(id, name, country)",
+
+        "Inventory(product_id, supplier_id, stock)",
+
+        "Projects(id, name, budget)",
+
+        "Assignments(employee_id, project_id)",
+
+        "Payments(id, customer_id, amount)"
+
+    ];
+
+},
+
+/* ==========================
+SEED DATABASE
+========================== */
+
+seed(){
+
+this.db.run(`
+
+/* --------------------------
+TABLES
+-------------------------- */
 
 CREATE TABLE Departments(
+
     id INTEGER PRIMARY KEY,
+
     name TEXT
+
 );
 
 CREATE TABLE Employees(
+
     id INTEGER PRIMARY KEY,
+
     name TEXT,
+
     salary INTEGER,
+
     department_id INTEGER
+
 );
 
 CREATE TABLE Customers(
-    id INTEGER PRIMARY KEY,
-    name TEXT,
-    city TEXT
-);
 
-CREATE TABLE Products(
     id INTEGER PRIMARY KEY,
+
     name TEXT,
-    price INTEGER,
-    category_id INTEGER
+
+    city TEXT
+
 );
 
 CREATE TABLE Categories(
+
     id INTEGER PRIMARY KEY,
+
     name TEXT
+
+);
+
+CREATE TABLE Products(
+
+    id INTEGER PRIMARY KEY,
+
+    name TEXT,
+
+    price INTEGER,
+
+    category_id INTEGER
+
 );
 
 CREATE TABLE Orders(
+
     id INTEGER PRIMARY KEY,
+
     customer_id INTEGER,
+
     product_id INTEGER,
+
     quantity INTEGER
+
 );
 
 CREATE TABLE Suppliers(
+
     id INTEGER PRIMARY KEY,
+
     name TEXT,
+
     country TEXT
+
 );
 
 CREATE TABLE Inventory(
+
     product_id INTEGER,
+
     supplier_id INTEGER,
+
     stock INTEGER
+
 );
 
 CREATE TABLE Projects(
+
     id INTEGER PRIMARY KEY,
+
     name TEXT,
+
     budget INTEGER
+
 );
 
 CREATE TABLE Assignments(
+
     employee_id INTEGER,
+
     project_id INTEGER
+
 );
 
 CREATE TABLE Payments(
+
     id INTEGER PRIMARY KEY,
+
     customer_id INTEGER,
+
     amount INTEGER
+
 );
 
-/* =========================
-   SEED DATA
-========================= */
+/* --------------------------
+SEED DATA
+-------------------------- */
 
 INSERT INTO Departments VALUES
 (1,'Engineering'),
@@ -166,31 +267,43 @@ INSERT INTO Payments VALUES
 (2,2,450),
 (3,3,300);
 
-        `);
+`);
 
-    },
+},
 
-    execute(sql){
+/* ==========================
+EXECUTE QUERY
+========================== */
 
-        try{
+execute(sql){
 
-            const result =
-                this.db.exec(sql);
+    try{
 
-            return {
-                success:true,
-                data:result
-            };
+        const result =
+            this.db.exec(sql);
 
-        }catch(err){
+        return {
 
-            return {
-                success:false,
-                error:err.message
-            };
+            success:true,
 
-        }
+            data:result
+
+        };
 
     }
+
+    catch(error){
+
+        return {
+
+            success:false,
+
+            error:error.message
+
+        };
+
+    }
+
+}
 
 };

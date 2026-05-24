@@ -1,303 +1,242 @@
 /* ==========================
-   SQL VALIDATION ENGINE
+SQL VALIDATOR
 ========================== */
 
 window.Validator = {
 
-/* --------------------------
-   ENTRY POINT
--------------------------- */
+/* ==========================
+MAIN VALIDATION
+========================== */
 
-async validate(exercise,userSQL){
+async validate(exercise, userSQL){
 
-    switch(
-        exercise.validatorType
-    ){
+    try{
 
-        case "queryMatch":
+        Database.reset();
 
-            return this.queryMatch(
-                exercise,
+        const expected =
+            Database.execute(
+                exercise.expectedQuery
+            );
+
+        Database.reset();
+
+        const actual =
+            Database.execute(
                 userSQL
             );
 
-        case "resultMatch":
-
-            return this.resultMatch(
-                exercise,
-                userSQL
-            );
-
-        case "mutationMatch":
-
-            return this.mutationMatch(
-                exercise,
-                userSQL
-            );
-
-        default:
+        if(
+            !actual.success
+        ){
 
             return {
+
                 success:false,
-                message:"Unknown validator."
+
+                message:
+                actual.error
+
             };
 
-    }
-
-},
-
-/* --------------------------
-   NORMALIZER
--------------------------- */
-
-normalize(sql){
-
-    return sql
-        .toLowerCase()
-        .replace(/;/g,"")
-        .replace(/\s+/g," ")
-        .trim();
-
-},
-
-/* --------------------------
-   QUERY MATCH
--------------------------- */
-
-queryMatch(exercise,userSQL){
-
-    const expected =
-        this.normalize(
-            exercise.expectedQuery
-        );
-
-    const actual =
-        this.normalize(userSQL);
-
-    if(expected === actual){
-
-        return {
-            success:true,
-            message:"Correct SQL."
-        };
-
-    }
-
-    return {
-
-        success:false,
-
-        message:
-        "Query structure differs from expected answer."
-
-    };
-
-},
-
-/* --------------------------
-   RESULT MATCH
--------------------------- */
-
-async resultMatch(
-    exercise,
-    userSQL
-){
-
-    await Database.reset();
-
-    const userResult =
-        Database.execute(userSQL);
-
-    await Database.reset();
-
-    const expectedResult =
-        Database.execute(
-            exercise.starterCode
-        );
-
-    if(
-        !userResult.success
-    ){
-
-        return {
-
-            success:false,
-
-            message:
-            "Your SQL contains errors."
-
-        };
-
-    }
-
-    const userData =
-        JSON.stringify(
-            userResult.data
-        );
-
-    const expectedData =
-        JSON.stringify(
-            expectedResult.data
-        );
-
-    if(
-        userData === expectedData
-    ){
-
-        return {
-
-            success:true,
-
-            message:
-            "Correct result set."
-
-        };
-
-    }
-
-    return {
-
-        success:false,
-
-        message:
-        "Returned rows do not match expected output."
-
-    };
-
-},
-
-/* --------------------------
-   MUTATION MATCH
--------------------------- */
-
-async mutationMatch(
-    exercise,
-    userSQL
-){
-
-    await Database.reset();
-
-    const mutation =
-        Database.execute(userSQL);
-
-    if(
-        !mutation.success
-    ){
-
-        return {
-
-            success:false,
-
-            message:
-            mutation.error
-
-        };
-
-    }
-
-    const verification =
-        Database.execute(
-            exercise.verifyQuery
-        );
-
-    if(
-        !verification.success
-    ){
-
-        return {
-
-            success:false,
-
-            message:
-            "Verification failed."
-
-        };
-
-    }
-
-    const rows =
-        verification.data;
-
-    /* INSERT */
-
-    if(
-        exercise.topic === "INSERT"
-    ){
+        }
 
         if(
-            rows.length &&
-            rows[0].values.length > 0
+            !expected.success
         ){
 
             return {
 
-                success:true,
+                success:false,
 
                 message:
-                "Insert successful."
+                "Exercise definition error."
 
             };
 
         }
 
-    }
+        const success =
+            this.compareResults(
+                expected.data,
+                actual.data
+            );
 
-    /* UPDATE */
+        return {
 
-    if(
-        exercise.topic === "UPDATE"
-    ){
+            success,
 
-        const value =
-            rows[0]?.values?.[0]?.[0];
+            message: success
 
-        if(value === 60000){
+            ?
 
-            return {
+            "Query result matches expected output."
 
-                success:true,
+            :
 
-                message:
-                "Update successful."
+            "Result does not match expected output."
 
-            };
-
-        }
+        };
 
     }
 
-    /* DELETE */
+    catch(error){
+
+        return {
+
+            success:false,
+
+            message:error.message
+
+        };
+
+    }
+
+},
+
+/* ==========================
+COMPARE RESULTS
+========================== */
+
+compareResults(expected, actual){
 
     if(
-        exercise.topic === "DELETE"
+        expected.length !==
+        actual.length
     ){
+
+        return false;
+
+    }
+
+    if(
+        expected.length === 0 &&
+        actual.length === 0
+    ){
+
+        return true;
+
+    }
+
+    for(
+
+        let i=0;
+
+        i<expected.length;
+
+        i++
+
+    ){
+
+        const expectedSet =
+            expected[i];
+
+        const actualSet =
+            actual[i];
 
         if(
-            rows.length === 0 ||
-            rows[0].values.length === 0
+            !this.compareTable(
+                expectedSet,
+                actualSet
+            )
         ){
 
-            return {
-
-                success:true,
-
-                message:
-                "Delete successful."
-
-            };
+            return false;
 
         }
 
     }
 
-    return {
+    return true;
 
-        success:false,
+},
 
-        message:
-        "Database state does not match expected mutation."
+/* ==========================
+COMPARE TABLE
+========================== */
 
-    };
+compareTable(expected, actual){
+
+    const expectedCols =
+        [...expected.columns]
+        .sort();
+
+    const actualCols =
+        [...actual.columns]
+        .sort();
+
+    if(
+
+        JSON.stringify(
+            expectedCols
+        )
+
+        !==
+
+        JSON.stringify(
+            actualCols
+        )
+
+    ){
+
+        return false;
+
+    }
+
+    const expectedRows =
+        this.normalizeRows(
+            expected.values
+        );
+
+    const actualRows =
+        this.normalizeRows(
+            actual.values
+        );
+
+    return (
+
+        JSON.stringify(
+            expectedRows
+        )
+
+        ===
+
+        JSON.stringify(
+            actualRows
+        )
+
+    );
+
+},
+
+/* ==========================
+NORMALIZE ROWS
+========================== */
+
+normalizeRows(rows){
+
+    return rows
+
+        .map(row =>
+
+            row.map(value =>
+
+                String(value)
+                .trim()
+                .toLowerCase()
+
+            )
+
+        )
+
+        .sort((a,b)=>{
+
+            return JSON.stringify(a)
+            .localeCompare(
+                JSON.stringify(b)
+            );
+
+        });
 
 }
 
