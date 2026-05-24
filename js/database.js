@@ -1,30 +1,31 @@
-/* GLOBAL DATABASE MODULE */
-
 window.Database = {
 
     db: null,
 
     async init(){
 
-        try{
+        const SQL = await initSqlJs({
+            locateFile: f =>
+            `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${f}`
+        });
 
-            const SQL = await initSqlJs({
-                locateFile: file =>
-                `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`
-            });
+        this.SQL = SQL;
 
-            this.db = new SQL.Database();
+        this.db = new SQL.Database();
 
-            this.seed();
+        this.seed();
 
-            console.log("SQLite database initialized.");
+    },
 
-        }catch(err){
+    reset(){
 
-            console.error(err);
-
-            throw err;
+        if(this.db){
+            this.db.close();
         }
+
+        this.db = new this.SQL.Database();
+
+        this.seed();
 
     },
 
@@ -32,122 +33,163 @@ window.Database = {
 
         this.db.run(`
 
-        /* =======================
-           DEPARTMENTS
-        ======================= */
+/* =========================
+   CORE TABLES
+========================= */
 
-        CREATE TABLE Departments(
-            id INTEGER PRIMARY KEY,
-            department_name TEXT
-        );
+CREATE TABLE Departments(
+    id INTEGER PRIMARY KEY,
+    name TEXT
+);
 
-        INSERT INTO Departments VALUES
-        (1,'Engineering'),
-        (2,'Sales'),
-        (3,'HR'),
-        (4,'Marketing');
+CREATE TABLE Employees(
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    salary INTEGER,
+    department_id INTEGER
+);
 
-        /* =======================
-           EMPLOYEES
-        ======================= */
+CREATE TABLE Customers(
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    city TEXT
+);
 
-        CREATE TABLE Employees(
-            id INTEGER PRIMARY KEY,
-            name TEXT,
-            salary INTEGER,
-            department_id INTEGER
-        );
+CREATE TABLE Products(
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    price INTEGER,
+    category_id INTEGER
+);
 
-        INSERT INTO Employees VALUES
-        (1,'Alice',72000,1),
-        (2,'Bob',54000,2),
-        (3,'Charlie',88000,1),
-        (4,'Diana',61000,3),
-        (5,'Ethan',47000,4);
+CREATE TABLE Categories(
+    id INTEGER PRIMARY KEY,
+    name TEXT
+);
 
-        /* =======================
-           PRODUCTS
-        ======================= */
+CREATE TABLE Orders(
+    id INTEGER PRIMARY KEY,
+    customer_id INTEGER,
+    product_id INTEGER,
+    quantity INTEGER
+);
 
-        CREATE TABLE Products(
-            id INTEGER PRIMARY KEY,
-            product_name TEXT,
-            price INTEGER,
-            stock INTEGER
-        );
+CREATE TABLE Suppliers(
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    country TEXT
+);
 
-        INSERT INTO Products VALUES
-        (1,'Laptop',1200,14),
-        (2,'Keyboard',70,55),
-        (3,'Monitor',350,22),
-        (4,'Mouse',30,95);
+CREATE TABLE Inventory(
+    product_id INTEGER,
+    supplier_id INTEGER,
+    stock INTEGER
+);
 
-        /* =======================
-           CUSTOMERS
-        ======================= */
+CREATE TABLE Projects(
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    budget INTEGER
+);
 
-        CREATE TABLE Customers(
-            id INTEGER PRIMARY KEY,
-            customer_name TEXT,
-            city TEXT
-        );
+CREATE TABLE Assignments(
+    employee_id INTEGER,
+    project_id INTEGER
+);
 
-        INSERT INTO Customers VALUES
-        (1,'John','Berlin'),
-        (2,'Maria','Paris'),
-        (3,'Lucas','Rome'),
-        (4,'Sophia','Madrid');
+CREATE TABLE Payments(
+    id INTEGER PRIMARY KEY,
+    customer_id INTEGER,
+    amount INTEGER
+);
 
-        /* =======================
-           ORDERS
-        ======================= */
+/* =========================
+   SEED DATA
+========================= */
 
-        CREATE TABLE Orders(
-            id INTEGER PRIMARY KEY,
-            customer_id INTEGER,
-            product_id INTEGER,
-            quantity INTEGER
-        );
+INSERT INTO Departments VALUES
+(1,'Engineering'),
+(2,'Sales'),
+(3,'HR');
 
-        INSERT INTO Orders VALUES
-        (1,1,1,1),
-        (2,2,2,3),
-        (3,3,3,2),
-        (4,1,4,5);
+INSERT INTO Employees VALUES
+(1,'Alice',75000,1),
+(2,'Bob',52000,2),
+(3,'Charlie',88000,1),
+(4,'Diana',61000,3),
+(5,'Ethan',47000,2);
+
+INSERT INTO Customers VALUES
+(1,'John','Berlin'),
+(2,'Maria','Paris'),
+(3,'Lucas','Rome');
+
+INSERT INTO Categories VALUES
+(1,'Electronics'),
+(2,'Office'),
+(3,'Gaming');
+
+INSERT INTO Products VALUES
+(1,'Laptop',1200,1),
+(2,'Keyboard',80,2),
+(3,'Mouse',40,2),
+(4,'Monitor',300,1);
+
+INSERT INTO Orders VALUES
+(1,1,1,1),
+(2,1,2,2),
+(3,2,3,1),
+(4,3,4,2);
+
+INSERT INTO Suppliers VALUES
+(1,'TechCorp','USA'),
+(2,'GlobalParts','Germany');
+
+INSERT INTO Inventory VALUES
+(1,1,50),
+(2,2,120),
+(3,2,200),
+(4,1,30);
+
+INSERT INTO Projects VALUES
+(1,'Website Revamp',50000),
+(2,'Mobile App',120000);
+
+INSERT INTO Assignments VALUES
+(1,1),
+(2,1),
+(3,2),
+(4,2);
+
+INSERT INTO Payments VALUES
+(1,1,200),
+(2,2,450),
+(3,3,300);
 
         `);
 
     },
 
-    execute(query){
+    execute(sql){
 
         try{
 
-            const result = this.db.exec(query);
+            const result =
+                this.db.exec(sql);
 
             return {
                 success:true,
                 data:result
             };
 
-        }catch(error){
+        }catch(err){
 
             return {
                 success:false,
-                error:error.message
+                error:err.message
             };
 
         }
-
-    },
-
-    reset(){
-
-        this.db.close();
-
-        this.db = null;
-
-        return this.init();
 
     }
 

@@ -10,13 +10,14 @@ let currentExercise = null;
 let score = 0;
 let completed = 0;
 
+let exerciseIndex = 0;
+let filteredExercises = [];
+
 /* ==========================
    STARTUP
 ========================== */
 
-window.addEventListener(
-"DOMContentLoaded",
-async ()=>{
+window.addEventListener("DOMContentLoaded", async () => {
 
     await Database.init();
 
@@ -25,6 +26,7 @@ async ()=>{
     initializeTopics();
     initializeDifficulty();
 
+    loadExerciseSet();
     loadExercise();
 
 });
@@ -33,25 +35,18 @@ async ()=>{
    EDITOR
 ========================== */
 
-function initializeEditor(){
+function initializeEditor() {
 
     editor = CodeMirror.fromTextArea(
-
-        document.getElementById(
-            "sql-editor"
-        ),
-
+        document.getElementById("sql-editor"),
         {
-
-            mode:"text/x-sql",
-            theme:"material-darker",
-            lineNumbers:true,
-            matchBrackets:true,
-            smartIndent:true,
-            autofocus:true
-
+            mode: "text/x-sql",
+            theme: "material-darker",
+            lineNumbers: true,
+            matchBrackets: true,
+            smartIndent: true,
+            autofocus: true
         }
-
     );
 
 }
@@ -60,471 +55,322 @@ function initializeEditor(){
    BUTTONS
 ========================== */
 
-function initializeButtons(){
+function initializeButtons() {
 
-    document
-    .getElementById("runBtn")
-    .addEventListener(
-        "click",
-        runExercise
-    );
+    document.getElementById("runBtn")
+        .addEventListener("click", runExercise);
 
-    document
-    .getElementById("hintBtn")
-    .addEventListener(
-        "click",
-        toggleHint
-    );
+    document.getElementById("nextBtn")
+        .addEventListener("click", nextExercise);
 
-    createNextButton();
+    document.getElementById("hintBtn")
+        .addEventListener("click", toggleHint);
+
+    document.getElementById("resetBtn")
+        .addEventListener("click", () => {
+
+            Database.reset();
+            loadExerciseSet();
+            loadExercise();
+
+            document.getElementById("output").innerHTML =
+                "Database reset.";
+
+        });
+
+    document.getElementById("toggleSchemaBtn")
+        .addEventListener("click", toggleSchema);
 
 }
 
 /* ==========================
-   NEXT BUTTON
+   LOAD EXERCISE SET (BY DIFFICULTY)
 ========================== */
 
-function createNextButton(){
+function loadExerciseSet() {
 
-    if(
-        document.getElementById(
-            "nextBtn"
-        )
-    ){
-
-        return;
-
-    }
-
-    const btn =
-        document.createElement(
-            "button"
+    filteredExercises =
+        Exercises.filter(ex =>
+            ex.difficulty === currentDifficulty
         );
 
-    btn.id = "nextBtn";
-
-    btn.textContent =
-        "Next Exercise";
-
-    btn.style.marginTop = "18px";
-
-    btn.addEventListener(
-        "click",
-        nextExercise
-    );
-
-    document
-    .querySelector(
-        ".exercise-card"
-    )
-    .appendChild(btn);
+    exerciseIndex = 0;
 
 }
 
 /* ==========================
-   LOAD EXERCISE
+   LOAD CURRENT EXERCISE
 ========================== */
 
-function loadExercise(){
+function loadExercise() {
+
+    if (!filteredExercises.length) return;
 
     currentExercise =
-        ExerciseManager.getCurrent(
-            currentDifficulty
-        );
+        filteredExercises[exerciseIndex];
 
-    if(!currentExercise){
+    renderExercise(currentExercise);
 
-        return;
-
-    }
-
-    document
-    .getElementById(
-            "exerciseText"
-    )
-    .textContent =
-        currentExercise.prompt;
-
-    document
-    .getElementById(
-        "hintBox"
-    )
-    .textContent =
-        currentExercise.hint;
-
-    document
-    .getElementById(
-        "hintBox"
-    )
-    .classList.add(
-        "hidden"
-    );
-
-    editor.setValue(
-        currentExercise
-        .starterCode
-    );
-
-    syncTopicUI(
-        currentExercise.topic
-    );
-
+    syncTopicUI(currentExercise.topic);
 }
-
 /* ==========================
    RUN EXERCISE
 ========================== */
 
-async function runExercise(){
+async function runExercise() {
 
-    const sql =
-        editor.getValue();
+    const sql = editor.getValue();
 
-    renderExecution(
-        Database.execute(sql)
-    );
+    const result = Database.execute(sql);
+
+    renderExecution(result);
 
     const validation =
-        await Validator.validate(
-            currentExercise,
-            sql
-        );
+        await Validator.validate(currentExercise, sql);
 
-    renderValidation(
-        validation
-    );
-
+    renderValidation(validation);
 }
 
 /* ==========================
-   EXECUTION PANEL
+   EXECUTION OUTPUT
 ========================== */
 
-function renderExecution(result){
+function renderExecution(result) {
 
     const output =
-        document.getElementById(
-            "output"
-        );
+        document.getElementById("output");
 
-    if(
-        !result.success
-    ){
+    if (!result.success) {
 
         output.innerHTML = `
         <div class="error">
             ❌ ${result.error}
-        </div>
-        `;
+        </div>`;
 
         return;
-
     }
 
-    if(
-        result.data.length === 0
-    ){
+    if (result.data.length === 0) {
 
         output.innerHTML = `
         <div class="success">
             Query executed.
-        </div>
-        `;
+        </div>`;
 
         return;
-
     }
 
-    const table =
-        result.data[0];
+    const table = result.data[0];
 
-    let html =
-        `<table class="result-table">`;
+    let html = `<table class="result-table">`;
 
     html += "<thead><tr>";
 
-    table.columns.forEach(col=>{
-
-        html += `
-        <th>${col}</th>
-        `;
-
+    table.columns.forEach(col => {
+        html += `<th>${col}</th>`;
     });
 
     html += "</tr></thead><tbody>";
 
-    table.values.forEach(row=>{
+    table.values.forEach(row => {
 
         html += "<tr>";
 
-        row.forEach(cell=>{
-
-            html += `
-            <td>${cell}</td>
-            `;
-
+        row.forEach(cell => {
+            html += `<td>${cell}</td>`;
         });
 
         html += "</tr>";
-
     });
 
     html += "</tbody></table>";
 
     output.innerHTML = html;
-
 }
 
 /* ==========================
    VALIDATION
 ========================== */
 
-function renderValidation(
-    validation
-){
+function renderValidation(validation) {
 
     const output =
-        document.getElementById(
-            "output"
-        );
+        document.getElementById("output");
 
-    if(
-        validation.success
-    ){
+    if (validation.success) {
 
-        score += 10;
+        score += currentExercise.xp || 10;
         completed++;
 
         output.innerHTML += `
+        <div class="success feedback-card feedback-success">
+            ✅ Correct
+            <br><br>
+            ${validation.message}
+            <br><br>
+            XP: +${currentExercise.xp || 10}
+            <br>
+            Score: ${score}
+        </div>`;
 
-        <div class="success"
-        style="margin-top:18px">
-
-        ✅ Correct
-
-        <br>
-
-        ${validation.message}
-
-        <br><br>
-
-        Score: ${score}
-
-        </div>
-
-        `;
-
-    }
-
-    else{
+    } else {
 
         output.innerHTML += `
-
-        <div class="error"
-        style="margin-top:18px">
-
-        ❌ Incorrect
-
-        <br>
-
-        ${validation.message}
-
-        </div>
-
-        `;
-
+        <div class="error feedback-card feedback-error">
+            ❌ Incorrect
+            <br><br>
+            ${validation.message}
+        </div>`;
     }
-
 }
 
 /* ==========================
-   NEXT EXERCISE
+   NEXT EXERCISE (FIXED)
 ========================== */
 
-function nextExercise(){
+function nextExercise() {
 
-    ExerciseManager.next(
-        currentDifficulty
-    );
+    exerciseIndex++;
+
+    if (exerciseIndex >= filteredExercises.length) {
+        exerciseIndex = 0;
+    }
 
     Database.reset();
 
     loadExercise();
 
-    document
-    .getElementById(
-        "output"
-    )
-    .innerHTML =
-    "Ready.";
-
+    document.getElementById("output").innerHTML = "Ready.";
 }
 
 /* ==========================
    DIFFICULTY
 ========================== */
 
-function initializeDifficulty(){
+function initializeDifficulty() {
 
     const selector =
-        document.getElementById(
-            "difficulty"
-        );
+        document.getElementById("difficulty");
 
-    selector.addEventListener(
+    selector.addEventListener("change", (e) => {
 
-        "change",
+        currentDifficulty = e.target.value;
 
-        e=>{
+        loadExerciseSet();
+        loadExercise();
 
-            currentDifficulty =
-                e.target.value;
-
-            ExerciseManager
-            .reset();
-
-            loadExercise();
-
-        }
-
-    );
-
+    });
 }
 
 /* ==========================
    TOPICS
 ========================== */
 
-function initializeTopics(){
+function initializeTopics() {
 
     const topics =
-        document.querySelectorAll(
-            "#topics li"
-        );
+        document.querySelectorAll("#topics li");
 
-    topics.forEach(item=>{
+    topics.forEach(item => {
 
-        item.addEventListener(
+        item.addEventListener("click", () => {
 
-            "click",
+            loadTopicExercise(item.textContent);
 
-            ()=>{
-
-                const topic =
-                    item.textContent;
-
-                loadTopicExercise(
-                    topic
-                );
-
-            }
-
-        );
+        });
 
     });
-
 }
 
 /* ==========================
-   TOPIC EXERCISE LOADER
+   TOPIC FILTER
 ========================== */
 
-function loadTopicExercise(
-    topic
-){
+function loadTopicExercise(topic) {
 
-    const exercises =
-
-        Exercises.filter(ex=>
-
-            ex.difficulty ===
-            currentDifficulty
-
-            &&
-
+    const matches =
+        filteredExercises.filter(ex =>
             ex.topic === topic
-
         );
 
-    if(
-        exercises.length === 0
-    ){
+    if (!matches.length) return;
 
-        return;
+    currentExercise = matches[0];
 
-    }
+    exerciseIndex =
+        filteredExercises.indexOf(currentExercise);
 
-    currentExercise =
-        exercises[0];
-
-    document
-    .getElementById(
-        "exerciseText"
-    )
-    .textContent =
-        currentExercise.prompt;
-
-    document
-    .getElementById(
-        "hintBox"
-    )
-    .textContent =
-        currentExercise.hint;
-
-    editor.setValue(
-        currentExercise
-        .starterCode
-    );
+    renderExercise(currentExercise);
 
     syncTopicUI(topic);
-
 }
 
 /* ==========================
-   TOPIC ACTIVE STATE
+   TOPIC UI
 ========================== */
 
-function syncTopicUI(topic){
+function syncTopicUI(topic) {
 
-    document
-    .querySelectorAll(
-        "#topics li"
-    )
+    document.querySelectorAll("#topics li")
+        .forEach(li => {
 
-    .forEach(li=>{
-
-        li.classList.remove(
-            "active"
-        );
-
-        if(
-
-            li.textContent === topic
-
-        ){
-
-            li.classList.add(
-                "active"
+            li.classList.toggle(
+                "active",
+                li.textContent === topic
             );
 
-        }
+        });
+}
 
-    });
+/* ==========================
+   HINT
+========================== */
+
+function toggleHint() {
+
+    document.getElementById("hintBox")
+        .classList.toggle("hidden");
+}
+
+/* ==========================
+   SCHEMA
+========================== */
+function toggleSchema() {
+
+    const box =
+        document.getElementById("schemaBox");
+
+    const btn =
+        document.getElementById("toggleSchemaBtn");
+
+    box.classList.toggle("hidden");
+
+    btn.textContent =
+        box.classList.contains("hidden")
+        ? "Show Schema"
+        : "Hide Schema";
 
 }
 
 /* ==========================
-   HINT TOGGLE
+   HELPER
 ========================== */
+function renderExercise(ex) {
 
-function toggleHint(){
+    document.getElementById("exerciseText")
+        .textContent = ex.prompt;
 
-    document
-    .getElementById(
-        "hintBox"
-    )
-    .classList.toggle(
-        "hidden"
-    );
+    document.getElementById("hintBox")
+        .textContent = ex.hint;
 
+    document.getElementById("hintBox")
+        .classList.add("hidden");
+
+    document.getElementById("difficultyBadge")
+        .textContent = ex.difficulty;
+
+    document.getElementById("topicBadge")
+        .textContent = ex.topic;
+
+    editor.setValue("-- Write your SQL here");
 }

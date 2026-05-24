@@ -1,201 +1,223 @@
 window.Exercises = [
 
-/* ======================
-BEGINNER
-====================== */
+/* =========================
+   BEGINNER
+========================= */
 
 {
 id:1,
 difficulty:"Beginner",
 topic:"SELECT",
-prompt:"Select all rows from Employees.",
+title:"All Employees",
+prompt:"Return all columns from Employees.",
 hint:"Use SELECT * FROM Employees",
-starterCode:"SELECT * FROM Employees;",
-validatorType:"queryMatch",
-expectedQuery:"SELECT * FROM Employees;"
+starterMode:"empty",
+starterCode:"-- Write SQL here",
+validatorType:"resultMatch",
+xp:10
 },
 
 {
 id:2,
 difficulty:"Beginner",
 topic:"WHERE",
-prompt:"Show employees with salary > 60000.",
-hint:"Use WHERE salary > 60000",
-starterCode:
-`SELECT *
-FROM Employees
-WHERE salary > 60000;`,
-validatorType:"resultMatch"
+title:"High Salary Employees",
+prompt:"Find employees with salary greater than 60000.",
+hint:"Use WHERE salary > value",
+starterMode:"empty",
+starterCode:"-- Write SQL here",
+validatorType:"resultMatch",
+xp:10
 },
 
 {
 id:3,
 difficulty:"Beginner",
 topic:"ORDER BY",
-prompt:"Sort Products by price descending.",
+title:"Sort Products",
+prompt:"List all products ordered by price descending.",
 hint:"Use ORDER BY price DESC",
-starterCode:
-`SELECT *
-FROM Products
-ORDER BY price DESC;`,
-validatorType:"resultMatch"
+starterMode:"empty",
+starterCode:"-- Write SQL here",
+validatorType:"resultMatch",
+xp:10
 },
-
-/* ======================
-INTERMEDIATE
-====================== */
 
 {
 id:4,
-difficulty:"Intermediate",
-topic:"JOIN",
-prompt:"Show employee names with department names.",
-hint:"JOIN Employees and Departments.",
-starterCode:
-`SELECT
-e.name,
-d.department_name
-FROM Employees e
-JOIN Departments d
-ON e.department_id=d.id;`,
-validatorType:"resultMatch"
+difficulty:"Beginner",
+topic:"LIKE",
+title:"Search Customers",
+prompt:"Find customers whose name starts with 'M'.",
+hint:"Use LIKE 'M%'",
+starterMode:"empty",
+starterCode:"-- Write SQL here",
+validatorType:"resultMatch",
+xp:15
 },
 
 {
 id:5,
-difficulty:"Intermediate",
-topic:"GROUP BY",
-prompt:"Count employees per department.",
-hint:"COUNT(*) + GROUP BY",
-starterCode:
-`SELECT
-department_id,
-COUNT(*) AS total
-FROM Employees
-GROUP BY department_id;`,
-validatorType:"resultMatch"
+difficulty:"Beginner",
+topic:"AGGREGATE",
+title:"Count Employees",
+prompt:"Count total employees.",
+hint:"Use COUNT(*)",
+starterMode:"empty",
+starterCode:"-- Write SQL here",
+validatorType:"resultMatch",
+xp:15
 },
+
+/* =========================
+   INTERMEDIATE
+========================= */
 
 {
 id:6,
 difficulty:"Intermediate",
-topic:"HAVING",
-prompt:"Return departments having more than 1 employee.",
-hint:"HAVING filters grouped results.",
-starterCode:
-`SELECT
-department_id,
-COUNT(*) AS total
-FROM Employees
-GROUP BY department_id
-HAVING total > 1;`,
-validatorType:"resultMatch"
+topic:"JOIN",
+title:"Employee Departments",
+prompt:"Show employee names with their department names.",
+hint:"JOIN Employees and Departments",
+starterMode:"empty",
+starterCode:"-- Write SQL here",
+validatorType:"resultMatch",
+xp:25
 },
-
-/* ======================
-ADVANCED
-====================== */
 
 {
 id:7,
-difficulty:"Advanced",
-topic:"INSERT",
-prompt:"Insert Nina into Employees.",
-hint:"INSERT INTO Employees VALUES (...)",
-starterCode:
-`INSERT INTO Employees
-VALUES
-(6,'Nina',65000,2);`,
-validatorType:"mutationMatch",
-
-verifyQuery:
-"SELECT * FROM Employees WHERE name='Nina';"
+difficulty:"Intermediate",
+topic:"JOIN",
+title:"Orders with Customers",
+prompt:"List orders with customer names.",
+hint:"JOIN Orders and Customers",
+starterMode:"empty",
+starterCode:"-- Write SQL here",
+validatorType:"resultMatch",
+xp:25
 },
 
 {
 id:8,
-difficulty:"Advanced",
-topic:"UPDATE",
-prompt:"Update Bob's salary to 60000.",
-hint:"UPDATE ... SET ... WHERE ...",
-starterCode:
-`UPDATE Employees
-SET salary=60000
-WHERE name='Bob';`,
-validatorType:"mutationMatch",
-
-verifyQuery:
-"SELECT salary FROM Employees WHERE name='Bob';"
+difficulty:"Intermediate",
+topic:"GROUP BY",
+title:"Employees per Department",
+prompt:"Count employees in each department.",
+hint:"GROUP BY department_id",
+starterMode:"empty",
+starterCode:"-- Write SQL here",
+validatorType:"resultMatch",
+xp:30
 },
 
 {
 id:9,
-difficulty:"Advanced",
-topic:"DELETE",
-prompt:"Delete Ethan from Employees.",
-hint:"DELETE ... WHERE ...",
-starterCode:
-`DELETE FROM Employees
-WHERE name='Ethan';`,
-validatorType:"mutationMatch",
+difficulty:"Intermediate",
+topic:"HAVING",
+title:"Large Departments",
+prompt:"Find departments with more than 1 employee.",
+hint:"Use HAVING COUNT(*) > 1",
+starterMode:"empty",
+starterCode:"-- Write SQL here",
+validatorType:"resultMatch",
+xp:35
+},
 
-verifyQuery:
-"SELECT * FROM Employees WHERE name='Ethan';"
+{
+id:10,
+difficulty:"Intermediate",
+topic:"SUBQUERY",
+title:"Above Average Salary",
+prompt:"Find employees earning above average salary.",
+hint:"Use subquery with AVG()",
+starterMode:"empty",
+starterCode:"-- Write SQL here",
+validatorType:"resultMatch",
+xp:40
+},
+
+{
+id:11,
+difficulty:"Intermediate",
+topic:"CASE",
+title:"Salary Classification",
+prompt:"Classify employees as 'High' if salary > 60000 else 'Low'.",
+hint:"Use CASE WHEN",
+starterMode:"empty",
+starterCode:"-- Write SQL here",
+validatorType:"resultMatch",
+xp:40
+},
+
+/* =========================
+   ADVANCED
+========================= */
+
+{
+id:12,
+difficulty:"Advanced",
+topic:"JOIN",
+title:"Product Categories",
+prompt:"Show products with their category names.",
+hint:"JOIN Products and Categories",
+starterMode:"empty",
+starterCode:"-- Write SQL here",
+validatorType:"resultMatch",
+xp:50
+},
+
+{
+id:13,
+difficulty:"Advanced",
+topic:"JOIN",
+title:"Inventory Overview",
+prompt:"Show product stock with supplier names.",
+hint:"JOIN Inventory, Products, Suppliers",
+starterMode:"empty",
+starterCode:"-- Write SQL here",
+validatorType:"resultMatch",
+xp:60
+},
+
+{
+id:14,
+difficulty:"Advanced",
+topic:"AGGREGATION",
+title:"Revenue per Customer",
+prompt:"Calculate total payments per customer.",
+hint:"SUM(amount) + GROUP BY",
+starterMode:"empty",
+starterCode:"-- Write SQL here",
+validatorType:"resultMatch",
+xp:60
+},
+
+{
+id:15,
+difficulty:"Advanced",
+topic:"MULTI-JOIN",
+title:"Full Order View",
+prompt:"Show order id, customer name, product name, quantity.",
+hint:"JOIN Orders + Customers + Products",
+starterMode:"empty",
+starterCode:"-- Write SQL here",
+validatorType:"resultMatch",
+xp:70
+},
+
+{
+id:16,
+difficulty:"Advanced",
+topic:"SUBQUERY",
+title:"Top Spender",
+prompt:"Find customer(s) with highest total payments.",
+hint:"Use subquery with MAX(SUM()) pattern",
+starterMode:"empty",
+starterCode:"-- Write SQL here",
+validatorType:"resultMatch",
+xp:80
 }
 
 ];
-
-
-/* ======================
-HELPERS
-====================== */
-
-window.ExerciseManager = {
-
-currentIndex:0,
-
-getByDifficulty(level){
-
-    return Exercises.filter(
-        ex => ex.difficulty === level
-    );
-
-},
-
-getCurrent(level){
-
-    const list =
-        this.getByDifficulty(level);
-
-    return list[
-        this.currentIndex
-    ] || null;
-
-},
-
-next(level){
-
-    const list =
-        this.getByDifficulty(level);
-
-    this.currentIndex++;
-
-    if(
-        this.currentIndex >= list.length
-    ){
-
-        this.currentIndex = 0;
-
-    }
-
-    return this.getCurrent(level);
-
-},
-
-reset(){
-
-    this.currentIndex = 0;
-
-}
-
-};

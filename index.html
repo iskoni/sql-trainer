@@ -45,17 +45,17 @@ href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-d
 
             <ul id="topics">
 
-                <li class="active">SELECT</li>
-                <li>WHERE</li>
-                <li>ORDER BY</li>
-                <li>JOIN</li>
-                <li>GROUP BY</li>
-                <li>HAVING</li>
-                <li>INSERT</li>
-                <li>UPDATE</li>
-                <li>DELETE</li>
-
-            </ul>
+           	<li class="active">SELECT</li>
+           	<li>WHERE</li>
+           	<li>ORDER BY</li>
+           	<li>LIKE</li>
+           	<li>JOIN</li>
+           	<li>GROUP BY</li>
+           	<li>HAVING</li>
+           	<li>CASE</li>
+           	<li>SUBQUERY</li>
+           	<li>AGGREGATION</li>
+           </ul>
 
         </div>
 
@@ -88,9 +88,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-d
                 <p>Run SQL queries against the training database.</p>
             </div>
 
-            <button id="runBtn">
-                ▶ Run Query
-            </button>
+
 
         </header>
 
@@ -98,28 +96,69 @@ href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-d
 
         <section class="exercise-card">
 
-            <h3>Current Exercise</h3>
+    <div class="exercise-meta">
 
-            <p id="exerciseText">
-                Select all employees from the Employees table.
-            </p>
+        <span id="difficultyBadge"
+              class="badge badge-beginner">
+            Beginner
+        </span>
 
-            <button id="hintBtn">
-                Show Hint
-            </button>
+        <span id="topicBadge"
+              class="badge topic-badge">
+            SELECT
+        </span>
 
-            <div id="hintBox" class="hidden">
-                Use SELECT * FROM table_name
+    </div>
+
+    <h3>Exercise</h3>
+
+    <p id="exerciseText">
+        Loading...
+    </p>
+
+    <div id="schemaBox" class="schema-box hidden">
+
+   	 <h4>Database Schema</h4>
+
+   	 <ul id="schemaList" class="schema-list"></ul>
+
+    </div>
+
+	<button id="toggleSchemaBtn" class="btn btn-secondary">
+   		 Show Schema
+	</button>
+
+	<div id="hintBox" class="hidden"></div>
+
+
+            <div class="action-row">
+
+                <button id="runBtn" class="btn btn-primary">
+                	▶ Run
+                </button>
+
+                <button id="checkBtn" class="btn btn-success">
+                	✓ Check
+                </button>
+
+                <button id="hintBtn" class="btn btn-secondary">
+                	💡 Hint
+                </button>
+
+                <button id="resetBtn" class="btn btn-secondary">
+        		↻ Reset DB
+                </button>
+
             </div>
 
-        </section>
+</section>
 
         <!-- Editor -->
 
         <section class="editor-section">
 
             <textarea id="sql-editor">
-SELECT * FROM Employees;
+		-- Write your SQL here
             </textarea>
 
         </section>
