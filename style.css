@@ -219,6 +219,13 @@ META
 
 }
 
+.badge-elementary{
+
+    background:#0e4a5c;
+    color:#ccfbf1;
+
+}
+
 .badge-intermediate{
 
     background:#78350f;
@@ -233,10 +240,25 @@ META
 
 }
 
+.badge-proficient{
+
+    background:#4a1d96;
+    color:#ede9fe;
+
+}
+
 .topic-badge{
 
     background:#1e293b;
     color:#93c5fd;
+
+}
+
+.counter-badge{
+
+    background:#1e293b;
+    color:#94a3b8;
+    margin-left:auto;
 
 }
 
@@ -377,6 +399,31 @@ HINT
     5px solid #3b82f6;
 
     line-height:1.7;
+
+}
+
+/* ==========================
+NOTE BOX
+========================== */
+
+.note-box{
+
+    margin-top:14px;
+
+    padding:14px 16px;
+
+    border-radius:12px;
+
+    background:#1c1917;
+
+    border-left:
+    4px solid #f59e0b;
+
+    color:#fbbf24;
+
+    font-size:13px;
+
+    line-height:1.6;
 
 }
 

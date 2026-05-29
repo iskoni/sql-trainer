@@ -1,6 +1,6 @@
 /* ==========================
-SQL TRAINER APP
-========================== */
+   SQL TRAINER APP
+   ========================== */
 
 let editor;
 
@@ -18,8 +18,8 @@ let exerciseIndex = 0;
 let filteredExercises = [];
 
 /* ==========================
-STARTUP
-========================== */
+   STARTUP
+   ========================== */
 
 window.addEventListener(
 
@@ -33,8 +33,6 @@ window.addEventListener(
 
         initializeButtons();
 
-        initializeTopics();
-
         initializeDifficulty();
 
         loadExerciseSet();
@@ -43,13 +41,15 @@ window.addEventListener(
 
         renderSchema();
 
+        renderTablesList();
+
     }
 
 );
 
 /* ==========================
-EDITOR
-========================== */
+   EDITOR
+   ========================== */
 
 function initializeEditor(){
 
@@ -82,8 +82,8 @@ function initializeEditor(){
 }
 
 /* ==========================
-BUTTONS
-========================== */
+   BUTTONS
+   ========================== */
 
 function initializeButtons(){
 
@@ -153,14 +153,15 @@ function initializeButtons(){
 }
 
 /* ==========================
-EXERCISE SET
-========================== */
+   EXERCISE SET
+   ========================== */
 
 function loadExerciseSet(){
 
     filteredExercises =
 
-        Exercises.filter(
+        (window.Exercises || [])
+        .filter(
 
             ex =>
 
@@ -171,17 +172,28 @@ function loadExerciseSet(){
 
     exerciseIndex = 0;
 
+    /* Rebuild topic sidebar */
+
+    renderTopics();
+
 }
 
 /* ==========================
-LOAD EXERCISE
-========================== */
+   LOAD EXERCISE
+   ========================== */
 
 function loadExercise(){
 
     if(
         !filteredExercises.length
     ){
+
+        document
+        .getElementById(
+            "exerciseText"
+        )
+        .textContent =
+            "No exercises for this level yet.";
 
         return;
 
@@ -200,11 +212,13 @@ function loadExercise(){
         currentExercise.topic
     );
 
+    updateCounter();
+
 }
 
 /* ==========================
-RENDER EXERCISE
-========================== */
+   RENDER EXERCISE
+   ========================== */
 
 function renderExercise(ex){
 
@@ -230,12 +244,46 @@ function renderExercise(ex){
         "hidden"
     );
 
-    document
-    .getElementById(
-        "difficultyBadge"
-    )
-    .textContent =
+    /* Note box for non-SQLite */
+
+    const noteBox =
+        document
+        .getElementById(
+            "noteBox"
+        );
+
+    if(ex.note){
+
+        noteBox.textContent =
+            "⚠ " + ex.note;
+
+        noteBox.classList
+        .remove("hidden");
+
+    } else {
+
+        noteBox.textContent = "";
+
+        noteBox.classList
+        .add("hidden");
+
+    }
+
+    /* Difficulty badge */
+
+    const badge =
+        document
+        .getElementById(
+            "difficultyBadge"
+        );
+
+    badge.textContent =
         ex.difficulty;
+
+    badge.className =
+        "badge badge-" +
+        ex.difficulty
+        .toLowerCase();
 
     document
     .getElementById(
@@ -245,19 +293,64 @@ function renderExercise(ex){
         ex.topic;
 
     editor.setValue(
+        ex.starterCode ||
         "-- Write your SQL here"
     );
 
 }
 
 /* ==========================
-RUN EXERCISE
-========================== */
+   EXERCISE COUNTER
+   ========================== */
+
+function updateCounter(){
+
+    document
+    .getElementById(
+        "exerciseCounter"
+    )
+    .textContent =
+        (exerciseIndex + 1) +
+        " / " +
+        filteredExercises.length;
+
+}
+
+/* ==========================
+   RUN EXERCISE
+   ========================== */
 
 async function runExercise(){
 
     const sql =
         editor.getValue();
+
+    /* For non-SQLite conceptual
+       exercises, show the query
+       but skip validation */
+
+    if(currentExercise.note &&
+       !currentExercise.expectedQuery){
+
+        document
+        .getElementById("output")
+        .innerHTML = `
+
+        <div class="feedback-card
+                     feedback-error">
+
+            This is a conceptual
+            exercise. The syntax
+            shown is not supported
+            in SQLite.
+
+        </div>
+
+        `;
+
+        return;
+
+    }
 
     const result =
         Database.execute(sql);
@@ -284,8 +377,8 @@ async function runExercise(){
 }
 
 /* ==========================
-RESULT PANEL
-========================== */
+   RESULT PANEL
+   ========================== */
 
 function renderExecution(result){
 
@@ -359,7 +452,7 @@ function renderExecution(result){
         row.forEach(cell=>{
 
             html +=
-            `<td>${cell}</td>`;
+            `<td>${cell !== null ? cell : '<em>NULL</em>'}</td>`;
 
         });
 
@@ -376,8 +469,8 @@ function renderExecution(result){
 }
 
 /* ==========================
-VALIDATION
-========================== */
+   VALIDATION
+   ========================== */
 
 function renderValidation(
     validation
@@ -445,8 +538,8 @@ function renderValidation(
 }
 
 /* ==========================
-NEXT EXERCISE
-========================== */
+   NEXT EXERCISE
+   ========================== */
 
 function nextExercise(){
 
@@ -479,8 +572,8 @@ function nextExercise(){
 }
 
 /* ==========================
-DIFFICULTY
-========================== */
+   DIFFICULTY
+   ========================== */
 
 function initializeDifficulty(){
 
@@ -501,6 +594,13 @@ function initializeDifficulty(){
 
             loadExercise();
 
+            document
+            .getElementById(
+                "output"
+            )
+            .innerHTML =
+                "Ready.";
+
         }
 
     );
@@ -508,17 +608,36 @@ function initializeDifficulty(){
 }
 
 /* ==========================
-TOPICS
-========================== */
+   DYNAMIC TOPICS
+   ========================== */
 
-function initializeTopics(){
+function renderTopics(){
 
-    document
-    .querySelectorAll(
-        "#topics li"
-    )
+    const topicsUl =
+        document
+        .getElementById(
+            "topics"
+        );
 
-    .forEach(li=>{
+    topicsUl.innerHTML = "";
+
+    /* Get unique topics from
+       filtered exercises */
+
+    const topics = [
+        ...new Set(
+            filteredExercises
+            .map(ex => ex.topic)
+        )
+    ];
+
+    topics.forEach(topic =>{
+
+        const li =
+            document
+            .createElement("li");
+
+        li.textContent = topic;
 
         li.addEventListener(
 
@@ -527,20 +646,33 @@ function initializeTopics(){
             ()=>{
 
                 loadTopicExercise(
-                    li.textContent
+                    topic
                 );
 
             }
 
         );
 
+        topicsUl.appendChild(li);
+
     });
+
+    /* Set first topic active */
+
+    if(topicsUl.firstChild){
+
+        topicsUl
+        .firstChild
+        .classList
+        .add("active");
+
+    }
 
 }
 
 /* ==========================
-TOPIC FILTER
-========================== */
+   TOPIC FILTER
+   ========================== */
 
 function loadTopicExercise(
     topic
@@ -582,11 +714,13 @@ function loadTopicExercise(
 
     syncTopicUI(topic);
 
+    updateCounter();
+
 }
 
 /* ==========================
-TOPIC UI
-========================== */
+   TOPIC UI
+   ========================== */
 
 function syncTopicUI(
     topic
@@ -613,8 +747,8 @@ function syncTopicUI(
 }
 
 /* ==========================
-HINT
-========================== */
+   HINT
+   ========================== */
 
 function toggleHint(){
 
@@ -629,8 +763,8 @@ function toggleHint(){
 }
 
 /* ==========================
-SCHEMA
-========================== */
+   SCHEMA
+   ========================== */
 
 function renderSchema(){
 
@@ -693,5 +827,45 @@ function toggleSchema(){
         :
 
         "Hide Schema";
+
+}
+
+/* ==========================
+   DYNAMIC TABLES LIST
+   ========================== */
+
+function renderTablesList(){
+
+    const tablesList =
+        document
+        .getElementById(
+            "tablesList"
+        );
+
+    if(!tablesList) return;
+
+    tablesList.innerHTML = "";
+
+    Database
+    .getSchema()
+
+    .forEach(row=>{
+
+        const tableName =
+            row.split("(")[0];
+
+        const li =
+            document
+            .createElement(
+                "li"
+            );
+
+        li.textContent =
+            tableName;
+
+        tablesList
+        .appendChild(li);
+
+    });
 
 }

@@ -10,6 +10,9 @@
 
 <title>SQL Trainer Platform</title>
 
+<meta name="description"
+      content="Practice SQL with 300+ interactive exercises across 5 difficulty levels. Master SELECT, JOIN, subqueries, window functions, DDL, DML and more.">
+
 <link rel="stylesheet"
       href="style.css">
 
@@ -47,12 +50,20 @@ href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-d
                     Beginner
                 </option>
 
+                <option value="Elementary">
+                    Elementary
+                </option>
+
                 <option value="Intermediate">
                     Intermediate
                 </option>
 
                 <option value="Advanced">
                     Advanced
+                </option>
+
+                <option value="Proficient">
+                    Proficient
                 </option>
 
             </select>
@@ -65,17 +76,6 @@ href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-d
 
             <ul id="topics">
 
-                <li class="active">SELECT</li>
-                <li>WHERE</li>
-                <li>ORDER BY</li>
-                <li>LIKE</li>
-                <li>JOIN</li>
-                <li>GROUP BY</li>
-                <li>HAVING</li>
-                <li>CASE</li>
-                <li>SUBQUERY</li>
-                <li>AGGREGATION</li>
-
             </ul>
 
         </div>
@@ -84,19 +84,8 @@ href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-d
 
             <h3>Available Tables</h3>
 
-            <ul class="tables">
-
-                <li>Employees</li>
-                <li>Departments</li>
-                <li>Customers</li>
-                <li>Orders</li>
-                <li>Products</li>
-                <li>Categories</li>
-                <li>Suppliers</li>
-                <li>Inventory</li>
-                <li>Projects</li>
-                <li>Assignments</li>
-                <li>Payments</li>
+            <ul id="tablesList"
+                class="tables">
 
             </ul>
 
@@ -146,6 +135,13 @@ href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-d
 
                 </span>
 
+                <span id="exerciseCounter"
+                      class="badge counter-badge">
+
+                    1 / 1
+
+                </span>
+
             </div>
 
             <h3>Exercise</h3>
@@ -155,6 +151,13 @@ href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-d
                 Loading exercise...
 
             </p>
+
+            <!-- Note for non-SQLite exercises -->
+
+            <div id="noteBox"
+                 class="note-box hidden">
+
+            </div>
 
             <!-- Schema -->
 
@@ -259,7 +262,11 @@ href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-d
 <!-- APP -->
 
 <script src="js/database.js"></script>
-<script src="js/exercises.js"></script>
+<script src="js/exercises_beginner.js"></script>
+<script src="js/exercises_elementary.js"></script>
+<script src="js/exercises_intermediate.js"></script>
+<script src="js/exercises_advanced.js"></script>
+<script src="js/exercises_proficient.js"></script>
 <script src="js/validator.js"></script>
 <script src="js/app.js"></script>
 
