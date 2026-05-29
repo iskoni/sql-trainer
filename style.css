@@ -142,6 +142,8 @@ MAIN
     flex:1;
 
     padding:34px;
+    
+    min-width: 0;
 
 }
 
@@ -262,6 +264,11 @@ META
 
 }
 
+.exercise-selector{
+    width: auto;
+    cursor: pointer;
+}
+
 /* ==========================
 BUTTON SYSTEM
 ========================== */
@@ -277,7 +284,13 @@ button{
     font-size:15px;
 
     font-weight:600;
+    
+    margin-top: 10px;
 
+}
+
+#toggleSchemaBtn {
+    margin-top: 20px;
 }
 
 .btn{
@@ -331,10 +344,22 @@ ACTION BAR
 
     gap:12px;
 
-    flex-wrap:wrap;
+    flex-wrap:nowrap;
+    
+    overflow-x:auto;
 
     margin-top:22px;
+    
+    padding-bottom:4px;
 
+}
+
+.action-row::-webkit-scrollbar {
+    height: 6px;
+}
+.action-row::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
 }
 
 /* ==========================
@@ -557,42 +582,144 @@ UTILITIES
 }
 
 /* ==========================
+EXPERT BADGE
+========================== */
+
+.badge-expert{
+    background:#991b1b;
+    color:#fca5a5;
+}
+
+/* ==========================
+ACCORDION SIDEBAR
+========================== */
+
+.topic-header{
+    font-weight:600;
+    color:#93c5fd;
+}
+
+.topic-exercises{
+    list-style:none;
+    margin-top:8px;
+    margin-left:10px;
+    border-left:2px solid #334155;
+    padding-left:10px;
+}
+
+.topic-exercise-item{
+    font-size:13px;
+    color:#94a3b8;
+    padding:6px 8px !important;
+    border-radius:6px !important;
+    margin-bottom:4px !important;
+}
+
+.topic-exercise-item:hover{
+    color:#fff;
+}
+
+.topic-exercise-item.active{
+    background:#2563eb !important;
+    color:#fff !important;
+}
+
+/* ==========================
+CODEMIRROR PLACEHOLDER
+========================== */
+
+.CodeMirror-empty {
+    color: #64748b !important;
+}
+
+/* ==========================
+SCROLLABLE TABLE
+========================== */
+.table-responsive {
+    overflow-x: auto;
+    width: 100%;
+}
+
+/* ==========================
+NAVIGATION BUTTONS
+========================== */
+#nextBtn {
+    margin-left: auto;
+}
+
+/* ==========================
+HAMBURGER BUTTON
+========================== */
+.hamburger-btn {
+    background: transparent;
+    color: #cbd5e1;
+    font-size: 24px;
+    padding: 8px;
+    margin-right: 16px;
+    display: none;
+}
+
+/* ==========================
 RESPONSIVE
 ========================== */
 
-@media(max-width:900px){
+@media(max-width:1050px){
 
-    .app-container{
-
-        flex-direction:column;
-
+    .action-row{
+        gap: 8px;
     }
 
-    .sidebar{
-
-        width:100%;
-
-        border-right:none;
-
-        border-bottom:
-        1px solid #1e293b;
-
+    .btn{
+        padding: 10px 14px;
+        font-size: 13px;
+        white-space: nowrap;
     }
 
 }
 
-@media(max-width:700px){
+@media(max-width:768px){
 
-    .action-row{
-
+    .app-container{
         flex-direction:column;
-
+    }
+    
+    .hamburger-btn {
+        display: block;
+    }
+    
+    .topbar {
+        display: flex;
+        align-items: center;
+    }
+    
+    .topbar h2 {
+        margin-bottom: 4px;
     }
 
+    .sidebar{
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 300px;
+        z-index: 100;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        overflow-y: auto;
+        border-right: 1px solid #1e293b;
+        box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+    }
+    
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    
     .btn{
-
-        width:100%;
-
+        padding: 10px 12px;
+    }
+    
+    #nextBtn {
+        margin-left: auto;
     }
 
 }

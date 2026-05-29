@@ -12,6 +12,7 @@
 <script src="js/exercises_intermediate.js"></script>
 <script src="js/exercises_advanced.js"></script>
 <script src="js/exercises_proficient.js"></script>
+<script src="js/exercises_expert.js"></script>
 <script src="js/validator.js"></script>
 <script>
 (async function(){
@@ -33,7 +34,7 @@
     }
 
     // Check difficulty distribution
-    const levels = ['Beginner','Elementary','Intermediate','Advanced','Proficient'];
+    const levels = ['Beginner','Elementary','Intermediate','Advanced','Proficient','Expert'];
     levels.forEach(level => {
         const count = exercises.filter(e => e.difficulty === level).length;
         print(`  ${level}: ${count} exercises`);

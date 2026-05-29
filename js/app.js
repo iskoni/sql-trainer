@@ -79,6 +79,12 @@ function initializeEditor(){
 
         );
 
+    editor.on("change", () => {
+        if (currentExercise) {
+            localStorage.setItem(`sql_draft_${currentExercise.id}`, editor.getValue());
+        }
+    });
+
 }
 
 /* ==========================
@@ -150,6 +156,38 @@ function initializeButtons(){
         toggleSchema
     );
 
+    document
+    .getElementById(
+        "exerciseCounter"
+    )
+    .addEventListener(
+        "change",
+        (e) => {
+            exerciseIndex = parseInt(e.target.value, 10);
+            Database.reset();
+            renderSchema();
+            loadExercise();
+            document.getElementById("output").innerHTML = "Ready.";
+        }
+    );
+
+    const mobileBtn = document.getElementById("mobileMenuBtn");
+    if(mobileBtn) {
+        mobileBtn.addEventListener("click", () => {
+            document.querySelector(".sidebar").classList.toggle("open");
+        });
+    }
+
+    // Close sidebar when clicking outside of it on mobile
+    document.addEventListener("click", (e) => {
+        const sidebar = document.querySelector(".sidebar");
+        if (sidebar && sidebar.classList.contains("open")) {
+            if (!sidebar.contains(e.target) && mobileBtn && !mobileBtn.contains(e.target)) {
+                sidebar.classList.remove("open");
+            }
+        }
+    });
+
 }
 
 /* ==========================
@@ -208,9 +246,7 @@ function loadExercise(){
         currentExercise
     );
 
-    syncTopicUI(
-        currentExercise.topic
-    );
+    syncTopicUI();
 
     updateCounter();
 
@@ -292,10 +328,19 @@ function renderExercise(ex){
     .textContent =
         ex.topic;
 
-    editor.setValue(
-        ex.starterCode ||
-        "-- Write your SQL here"
-    );
+    const defaultCode = "-- Write your SQL here";
+    const savedDraft = localStorage.getItem(`sql_draft_${ex.id}`);
+
+    if (savedDraft !== null && savedDraft !== "") {
+        editor.setValue(savedDraft);
+        editor.setOption("placeholder", "");
+    } else if (!ex.starterCode || ex.starterCode === defaultCode) {
+        editor.setValue("");
+        editor.setOption("placeholder", defaultCode);
+    } else {
+        editor.setValue(ex.starterCode);
+        editor.setOption("placeholder", "");
+    }
 
 }
 
@@ -305,14 +350,18 @@ function renderExercise(ex){
 
 function updateCounter(){
 
-    document
-    .getElementById(
-        "exerciseCounter"
-    )
-    .textContent =
-        (exerciseIndex + 1) +
-        " / " +
-        filteredExercises.length;
+    const selector = document.getElementById("exerciseCounter");
+    selector.innerHTML = "";
+    
+    filteredExercises.forEach((ex, idx) => {
+        const opt = document.createElement("option");
+        opt.value = idx;
+        opt.textContent = (idx + 1) + " / " + filteredExercises.length + " - " + ex.topic;
+        if (idx === exerciseIndex) {
+            opt.selected = true;
+        }
+        selector.appendChild(opt);
+    });
 
 }
 
@@ -428,7 +477,7 @@ function renderExecution(result){
         result.data[0];
 
     let html =
-        `<table class="result-table">`;
+        `<div class="table-responsive"><table class="result-table">`;
 
     html +=
         "<thead><tr>";
@@ -461,7 +510,7 @@ function renderExecution(result){
     });
 
     html +=
-        "</tbody></table>";
+        "</tbody></table></div>";
 
     output.innerHTML =
         html;
@@ -621,9 +670,6 @@ function renderTopics(){
 
     topicsUl.innerHTML = "";
 
-    /* Get unique topics from
-       filtered exercises */
-
     const topics = [
         ...new Set(
             filteredExercises
@@ -637,112 +683,53 @@ function renderTopics(){
             document
             .createElement("li");
 
+        li.className = "topic-header";
         li.textContent = topic;
 
-        li.addEventListener(
+        const exList = document.createElement("ul");
+        exList.className = "topic-exercises hidden";
+        
+        filteredExercises.filter(e => e.topic === topic).forEach(ex => {
+            const exLi = document.createElement("li");
+            exLi.textContent = ex.title || "Exercise " + ex.id;
+            exLi.className = "topic-exercise-item";
+            exLi.dataset.index = filteredExercises.indexOf(ex);
+            exLi.addEventListener("click", (e) => {
+                e.stopPropagation();
+                exerciseIndex = parseInt(exLi.dataset.index, 10);
+                Database.reset();
+                renderSchema();
+                loadExercise();
+                document.getElementById("output").innerHTML = "Ready.";
+                document.querySelector(".sidebar").classList.remove("open");
+            });
+            exList.appendChild(exLi);
+        });
 
-            "click",
+        li.addEventListener("click", () => {
+            exList.classList.toggle("hidden");
+        });
 
-            ()=>{
-
-                loadTopicExercise(
-                    topic
-                );
-
-            }
-
-        );
-
+        li.appendChild(exList);
         topicsUl.appendChild(li);
 
     });
 
-    /* Set first topic active */
-
-    if(topicsUl.firstChild){
-
-        topicsUl
-        .firstChild
-        .classList
-        .add("active");
-
-    }
-
 }
 
-/* ==========================
-   TOPIC FILTER
-   ========================== */
+function syncTopicUI(){
 
-function loadTopicExercise(
-    topic
-){
-
-    const matches =
-
-        filteredExercises
-        .filter(
-
-            ex =>
-
-            ex.topic ===
-            topic
-
-        );
-
-    if(
-        !matches.length
-    ){
-
-        return;
-
+    document.querySelectorAll(".topic-exercises").forEach(ul => ul.classList.add("hidden"));
+    document.querySelectorAll(".topic-exercise-item").forEach(li => li.classList.remove("active"));
+    
+    const activeLi = document.querySelector(`.topic-exercise-item[data-index="${exerciseIndex}"]`);
+    if (activeLi) {
+        activeLi.classList.add("active");
+        const parentUl = activeLi.closest(".topic-exercises");
+        if (parentUl) {
+            parentUl.classList.remove("hidden");
+        }
     }
-
-    currentExercise =
-        matches[0];
-
-    exerciseIndex =
-
-        filteredExercises
-        .indexOf(
-            currentExercise
-        );
-
-    renderExercise(
-        currentExercise
-    );
-
-    syncTopicUI(topic);
-
-    updateCounter();
-
-}
-
-/* ==========================
-   TOPIC UI
-   ========================== */
-
-function syncTopicUI(
-    topic
-){
-
-    document
-    .querySelectorAll(
-        "#topics li"
-    )
-
-    .forEach(li=>{
-
-        li.classList.toggle(
-
-            "active",
-
-            li.textContent
-            === topic
-
-        );
-
-    });
 
 }
 

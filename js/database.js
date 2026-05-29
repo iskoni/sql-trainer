@@ -80,7 +80,14 @@ getSchema(){
 
         "SalesLog(id, product_id, quantity_sold, sale_date, region)",
 
-        "EmployeeHistory(id, employee_id, old_salary, new_salary, change_date)"
+        "EmployeeHistory(id, employee_id, old_salary, new_salary, change_date)",
+        "WebTraffic(id, customer_id, page_url, time_spent_sec, visit_date)",
+        "Sensors(id, type, location)",
+        "SensorReadings(id, sensor_id, reading_value, reading_timestamp)",
+        "Authors(id, name, country)",
+        "Books(id, title, author_id, published_year)",
+        "BookLoans(id, book_id, customer_id, loan_date, return_date)",
+        "Demographics(id, city, population, median_income, average_age)"
 
     ];
 
@@ -264,6 +271,14 @@ CREATE TABLE EmployeeHistory(
 
 );
 
+CREATE TABLE WebTraffic(id INTEGER PRIMARY KEY, customer_id INTEGER, page_url TEXT, time_spent_sec INTEGER, visit_date TEXT);
+CREATE TABLE Sensors(id INTEGER PRIMARY KEY, type TEXT, location TEXT);
+CREATE TABLE SensorReadings(id INTEGER PRIMARY KEY, sensor_id INTEGER, reading_value REAL, reading_timestamp TEXT);
+CREATE TABLE Authors(id INTEGER PRIMARY KEY, name TEXT, country TEXT);
+CREATE TABLE Books(id INTEGER PRIMARY KEY, title TEXT, author_id INTEGER, published_year INTEGER);
+CREATE TABLE BookLoans(id INTEGER PRIMARY KEY, book_id INTEGER, customer_id INTEGER, loan_date TEXT, return_date TEXT);
+CREATE TABLE Demographics(id INTEGER PRIMARY KEY, city TEXT, population INTEGER, median_income INTEGER, average_age REAL);
+
 /* --------------------------
    SEED DATA
    -------------------------- */
@@ -403,6 +418,53 @@ INSERT INTO EmployeeHistory VALUES
 (4,12,90000,105000,'2019-12-01'),
 (5,2,48000,52000,'2023-01-10'),
 (6,8,60000,67000,'2022-07-15');
+
+INSERT INTO WebTraffic VALUES
+(1, 1, '/home', 45, '2024-05-01 10:00:00'),
+(2, 1, '/products', 120, '2024-05-01 10:00:45'),
+(3, 2, '/home', 10, '2024-05-01 10:05:00'),
+(4, 1, '/checkout', 300, '2024-05-01 10:02:45'),
+(5, 3, '/about', 60, '2024-05-02 11:00:00'),
+(6, 4, '/home', 20, '2024-05-02 11:10:00'),
+(7, 4, '/products', 150, '2024-05-02 11:10:20'),
+(8, 2, '/products', 90, '2024-05-03 09:00:00');
+
+INSERT INTO Sensors VALUES
+(1, 'Temperature', 'Lab A'),
+(2, 'Humidity', 'Lab A'),
+(3, 'Pressure', 'Lab B');
+
+INSERT INTO SensorReadings VALUES
+(1, 1, 22.5, '2024-06-01 08:00:00'),
+(2, 1, 22.7, '2024-06-01 09:00:00'),
+(3, 1, 23.1, '2024-06-01 10:00:00'),
+(4, 2, 45.0, '2024-06-01 08:00:00'),
+(5, 2, 46.2, '2024-06-01 09:00:00'),
+(6, 3, 101.3, '2024-06-01 08:30:00');
+
+INSERT INTO Authors VALUES
+(1, 'Jane Austen', 'UK'),
+(2, 'Mark Twain', 'USA'),
+(3, 'Victor Hugo', 'France');
+
+INSERT INTO Books VALUES
+(1, 'Pride and Prejudice', 1, 1813),
+(2, 'Emma', 1, 1815),
+(3, 'The Adventures of Tom Sawyer', 2, 1876),
+(4, 'Les Misérables', 3, 1862);
+
+INSERT INTO BookLoans VALUES
+(1, 1, 1, '2024-01-10', '2024-01-24'),
+(2, 2, 2, '2024-01-15', '2024-02-15'),
+(3, 1, 3, '2024-02-01', NULL),
+(4, 4, 1, '2024-02-10', '2024-02-20');
+
+INSERT INTO Demographics VALUES
+(1, 'Berlin', 3645000, 45000, 42.5),
+(2, 'Paris', 2148000, 48000, 41.2),
+(3, 'Rome', 2873000, 39000, 45.1),
+(4, 'Madrid', 3223000, 41000, 43.8),
+(5, 'London', 8982000, 52000, 39.5);
 
 `);
 
