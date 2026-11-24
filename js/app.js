@@ -80,6 +80,34 @@ function updateProgressUI(){
     updateCounter();
 }
 
+function resetAllProgress(){
+    const confirmed = window.confirm(
+        "Reset all solved exercises, XP score, and saved query drafts?"
+    );
+    if(!confirmed) return;
+
+    solvedIds.clear();
+    score = 0;
+
+    try{
+        localStorage.removeItem("sql_solved_ids");
+        const keysToRemove = [];
+        for(let i = 0; i < localStorage.length; i++){
+            const k = localStorage.key(i);
+            if(k && k.startsWith("sql_draft_")){
+                keysToRemove.push(k);
+            }
+        }
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+    } catch(_e){
+        // Ignore storage errors
+    }
+
+    updateProgressUI();
+    loadExercise();
+    resetOutput("All progress and saved drafts have been reset.");
+}
+
 /* ==========================
    STARTUP
    ========================== */
@@ -256,6 +284,11 @@ function initializeButtons(){
             navigateToExercise(parseInt(e.target.value, 10));
         }
     );
+
+    const resetProgressBtn = document.getElementById("resetProgressBtn");
+    if(resetProgressBtn){
+        resetProgressBtn.addEventListener("click", resetAllProgress);
+    }
 
     const mobileBtn = document.getElementById("mobileMenuBtn");
     if(mobileBtn) {

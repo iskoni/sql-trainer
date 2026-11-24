@@ -446,7 +446,7 @@ window.Validator = {
             const rounded = Math.abs(value) < 1e-9 ? 0 : Number(value.toFixed(4));
             return `N:${rounded}`;
         }
-        return `S:${String(value).trim().toLowerCase()}`;
+        return `S:${String(value).trim()}`;
     }
 
 };
