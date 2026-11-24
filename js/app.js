@@ -33,6 +33,8 @@ window.addEventListener(
 
         initializeButtons();
 
+        initializeVisualizationControls();
+
         initializeDifficulty();
 
         loadExerciseSet();
@@ -136,12 +138,7 @@ function initializeButtons(){
 
             loadExercise();
 
-            document
-            .getElementById(
-                "output"
-            )
-            .innerHTML =
-            "Database reset.";
+            resetOutput("Database reset.");
 
         }
 
@@ -167,7 +164,7 @@ function initializeButtons(){
             Database.reset();
             renderSchema();
             loadExercise();
-            document.getElementById("output").innerHTML = "Ready.";
+            resetOutput("Ready.");
         }
     );
 
@@ -249,6 +246,8 @@ function loadExercise(){
     syncTopicUI();
 
     updateCounter();
+
+    refreshErdIfVisible();
 
 }
 
@@ -365,6 +364,23 @@ function updateCounter(){
 
 }
 
+function resetOutput(message = "Ready."){
+
+    Visualizer.prepareChartControls(null);
+
+    const output = document.getElementById("output");
+    if(output){
+        output.classList.remove("hidden");
+        output.innerHTML = message;
+    }
+
+    const validationOutput = document.getElementById("validationOutput");
+    if(validationOutput){
+        validationOutput.innerHTML = "";
+    }
+
+}
+
 /* ==========================
    RUN EXERCISE
    ========================== */
@@ -381,9 +397,7 @@ async function runExercise(){
     if(currentExercise.note &&
        !currentExercise.expectedQuery){
 
-        document
-        .getElementById("output")
-        .innerHTML = `
+        resetOutput(`
 
         <div class="feedback-card
                      feedback-error">
@@ -395,7 +409,7 @@ async function runExercise(){
 
         </div>
 
-        `;
+        `);
 
         return;
 
@@ -437,9 +451,21 @@ function renderExecution(result){
             "output"
         );
 
+    const validationOutput =
+        document
+        .getElementById(
+            "validationOutput"
+        );
+
+    if(validationOutput){
+        validationOutput.innerHTML = "";
+    }
+
     if(
         !result.success
     ){
+
+        Visualizer.prepareChartControls(null);
 
         output.innerHTML = `
 
@@ -458,6 +484,8 @@ function renderExecution(result){
     if(
         result.data.length===0
     ){
+
+        Visualizer.prepareChartControls(null);
 
         output.innerHTML = `
 
@@ -515,6 +543,8 @@ function renderExecution(result){
     output.innerHTML =
         html;
 
+    Visualizer.prepareChartControls(table);
+
 }
 
 /* ==========================
@@ -525,10 +555,10 @@ function renderValidation(
     validation
 ){
 
-    const output =
+    const validationOutput =
         document
         .getElementById(
-            "output"
+            "validationOutput"
         );
 
     if(
@@ -540,7 +570,7 @@ function renderValidation(
 
         completed++;
 
-        output.innerHTML += `
+        validationOutput.innerHTML = `
 
         <div class="feedback-card feedback-success">
 
@@ -568,7 +598,7 @@ function renderValidation(
 
     else{
 
-        output.innerHTML += `
+        validationOutput.innerHTML = `
 
         <div class="feedback-card feedback-error">
 
@@ -611,12 +641,7 @@ function nextExercise(){
 
     loadExercise();
 
-    document
-    .getElementById(
-        "output"
-    )
-    .innerHTML =
-        "Ready.";
+    resetOutput("Ready.");
 
 }
 
@@ -643,12 +668,7 @@ function initializeDifficulty(){
 
             loadExercise();
 
-            document
-            .getElementById(
-                "output"
-            )
-            .innerHTML =
-                "Ready.";
+            resetOutput("Ready.");
 
         }
 
@@ -700,7 +720,7 @@ function renderTopics(){
                 Database.reset();
                 renderSchema();
                 loadExercise();
-                document.getElementById("output").innerHTML = "Ready.";
+                resetOutput("Ready.");
                 document.querySelector(".sidebar").classList.remove("open");
             });
             exList.appendChild(exLi);
@@ -763,10 +783,23 @@ function renderSchema(){
 
     list.innerHTML = "";
 
-    Database
-    .getSchema()
+    const details = Database.getSchemaDetails();
+    const rows = details.tables.length
+        ? details.tables.map(t => {
+            const cols = t.columns.map(c => {
+                const tags = [];
+                if(c.isPK) tags.push("PK");
+                if(c.isFK) tags.push("FK");
+                return tags.length ? `${c.name} [${tags.join(",")}]` : c.name;
+            }).join(", ");
+            return { tableName: t.name, text: `${t.name}(${cols})` };
+        })
+        : Database.getSchema().map(row => ({
+            tableName: row.split("(")[0],
+            text: row
+        }));
 
-    .forEach(row=>{
+    rows.forEach(item=>{
 
         const li =
             document
@@ -774,8 +807,8 @@ function renderSchema(){
                 "li"
             );
 
-        li.textContent =
-            row;
+        li.dataset.table = item.tableName;
+        li.textContent = item.text;
 
         list.appendChild(li);
 
@@ -801,19 +834,166 @@ function toggleSchema(){
         "hidden"
     );
 
+    const isHidden = box.classList.contains("hidden");
+
     btn.textContent =
+        isHidden
+        ? "Show Schema"
+        : "Hide Schema";
 
-        box.classList.contains(
-            "hidden"
-        )
+    if(!isHidden){
+        refreshErdIfVisible();
+    }
 
-        ?
+}
 
-        "Show Schema"
+function refreshErdIfVisible(){
 
-        :
+    const box = document.getElementById("schemaBox");
+    const erdView = document.getElementById("schemaErdView");
 
-        "Hide Schema";
+    if(box && !box.classList.contains("hidden") && erdView && !erdView.classList.contains("hidden")){
+        const scope = document.getElementById("erdScopeSelect").value;
+        Visualizer.renderERD("erdDiagram", scope, currentExercise, Visualizer.erdZoom, "erdMetaLabel");
+    }
+
+}
+
+function stepErdZoom(delta, isModal){
+
+    if(isModal){
+        Visualizer.erdModalZoom = delta === 0
+            ? 100
+            : Math.min(220, Math.max(50, Visualizer.erdModalZoom + delta));
+        document.getElementById("erdModalZoomLabel").textContent = `${Visualizer.erdModalZoom}%`;
+        Visualizer.applyErdZoom(document.getElementById("erdModalDiagram"), Visualizer.erdModalZoom);
+    } else {
+        Visualizer.erdZoom = delta === 0
+            ? 100
+            : Math.min(220, Math.max(50, Visualizer.erdZoom + delta));
+        document.getElementById("erdZoomLabel").textContent = `${Visualizer.erdZoom}%`;
+        Visualizer.applyErdZoom(document.getElementById("erdDiagram"), Visualizer.erdZoom);
+    }
+
+}
+
+function openErdModal(){
+
+    const modal = document.getElementById("erdModal");
+    const inlineScope = document.getElementById("erdScopeSelect").value;
+    const modalScopeSelect = document.getElementById("erdModalScopeSelect");
+
+    modalScopeSelect.value = inlineScope === "relevant" ? "all" : inlineScope;
+    Visualizer.erdModalZoom = 100;
+    document.getElementById("erdModalZoomLabel").textContent = "100%";
+
+    modal.classList.remove("hidden");
+
+    Visualizer.renderERD(
+        "erdModalDiagram",
+        modalScopeSelect.value,
+        currentExercise,
+        Visualizer.erdModalZoom,
+        "erdModalMetaLabel"
+    );
+
+}
+
+function closeErdModal(){
+
+    const modal = document.getElementById("erdModal");
+    if(modal){
+        modal.classList.add("hidden");
+    }
+
+}
+
+function initializeVisualizationControls(){
+
+    const tableTabBtn = document.getElementById("tableTabBtn");
+    const chartTabBtn = document.getElementById("chartTabBtn");
+    const outputEl = document.getElementById("output");
+    const chartView = document.getElementById("chartView");
+
+    tableTabBtn.addEventListener("click", () => {
+        tableTabBtn.classList.add("active");
+        chartTabBtn.classList.remove("active");
+        outputEl.classList.remove("hidden");
+        chartView.classList.add("hidden");
+    });
+
+    chartTabBtn.addEventListener("click", () => {
+        if(chartTabBtn.disabled) return;
+        chartTabBtn.classList.add("active");
+        tableTabBtn.classList.remove("active");
+        outputEl.classList.add("hidden");
+        chartView.classList.remove("hidden");
+        Visualizer.renderChart();
+    });
+
+    ["chartTypeSelect", "chartXSelect", "chartYSelect"].forEach(id => {
+        document.getElementById(id).addEventListener("change", () => {
+            if(!chartView.classList.contains("hidden")){
+                Visualizer.renderChart();
+            }
+        });
+    });
+
+    const schemaListTab = document.getElementById("schemaListTab");
+    const schemaErdTab = document.getElementById("schemaErdTab");
+    const schemaListView = document.getElementById("schemaListView");
+    const schemaErdView = document.getElementById("schemaErdView");
+
+    schemaListTab.addEventListener("click", () => {
+        schemaListTab.classList.add("active");
+        schemaErdTab.classList.remove("active");
+        schemaListView.classList.remove("hidden");
+        schemaErdView.classList.add("hidden");
+    });
+
+    schemaErdTab.addEventListener("click", () => {
+        schemaErdTab.classList.add("active");
+        schemaListTab.classList.remove("active");
+        schemaErdView.classList.remove("hidden");
+        schemaListView.classList.add("hidden");
+        refreshErdIfVisible();
+    });
+
+    document.getElementById("erdScopeSelect").addEventListener("change", () => {
+        refreshErdIfVisible();
+    });
+
+    document.getElementById("erdZoomInBtn").addEventListener("click", () => stepErdZoom(20, false));
+    document.getElementById("erdZoomOutBtn").addEventListener("click", () => stepErdZoom(-20, false));
+    document.getElementById("erdZoomResetBtn").addEventListener("click", () => stepErdZoom(0, false));
+    document.getElementById("erdFullscreenBtn").addEventListener("click", openErdModal);
+
+    document.getElementById("erdModalScopeSelect").addEventListener("change", (e) => {
+        Visualizer.renderERD(
+            "erdModalDiagram",
+            e.target.value,
+            currentExercise,
+            Visualizer.erdModalZoom,
+            "erdModalMetaLabel"
+        );
+    });
+
+    document.getElementById("erdModalZoomInBtn").addEventListener("click", () => stepErdZoom(20, true));
+    document.getElementById("erdModalZoomOutBtn").addEventListener("click", () => stepErdZoom(-20, true));
+    document.getElementById("erdModalZoomResetBtn").addEventListener("click", () => stepErdZoom(0, true));
+    document.getElementById("erdModalCloseBtn").addEventListener("click", closeErdModal);
+
+    document.getElementById("erdModal").addEventListener("click", (e) => {
+        if(e.target.id === "erdModal"){
+            closeErdModal();
+        }
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if(e.key === "Escape"){
+            closeErdModal();
+        }
+    });
 
 }
 
@@ -849,6 +1029,23 @@ function renderTablesList(){
 
         li.textContent =
             tableName;
+
+        li.addEventListener("click", () => {
+            const box = document.getElementById("schemaBox");
+            const btn = document.getElementById("toggleSchemaBtn");
+            if(box.classList.contains("hidden")){
+                box.classList.remove("hidden");
+                btn.textContent = "Hide Schema";
+            }
+
+            // Switch to list view and highlight the clicked table
+            document.getElementById("schemaListTab").click();
+            document.querySelectorAll("#schemaList li").forEach(item => {
+                item.classList.toggle("schema-highlight", item.dataset.table === tableName);
+            });
+            box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            document.querySelector(".sidebar").classList.remove("open");
+        });
 
         tablesList
         .appendChild(li);

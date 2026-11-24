@@ -559,6 +559,19 @@ FEEDBACK
 
 }
 
+#validationOutput .feedback-card{
+
+    margin-top:0;
+    margin-bottom:20px;
+
+}
+
+#output .feedback-card{
+
+    margin-top:0;
+
+}
+
 /* ==========================
 UTILITIES
 ========================== */
@@ -660,6 +673,250 @@ HAMBURGER BUTTON
 }
 
 /* ==========================
+TABS, COMPACT CONTROLS, VISUALIZATIONS & ERD
+========================== */
+
+.schema-header,
+.results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.schema-header h4,
+.results-header h3 {
+    margin-bottom: 0;
+}
+
+.view-tabs {
+    display: inline-flex;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 3px;
+    gap: 4px;
+}
+
+.tab-btn {
+    margin-top: 0;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 8px;
+}
+
+.tab-btn:hover:not(:disabled) {
+    color: #f8fafc;
+    background: #334155;
+}
+
+.tab-btn.active {
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.tab-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.compact-select {
+    width: auto;
+    padding: 7px 12px;
+    font-size: 13px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    background: #1e293b;
+    color: #e2e8f0;
+    cursor: pointer;
+}
+
+.schema-highlight {
+    background: rgba(37, 99, 235, 0.2);
+    border-left: 3px solid #3b82f6;
+    padding-left: 10px !important;
+    border-radius: 6px;
+    color: #ffffff !important;
+}
+
+/* ERD Toolbar & Viewport */
+
+.erd-toolbar,
+.erd-toolbar-modal {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.erd-filter-group,
+.erd-zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.erd-filter-group label,
+.chart-control label {
+    font-size: 13px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.erd-meta-label,
+.erd-zoom-label {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.erd-zoom-label {
+    min-width: 42px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.btn-icon {
+    margin-top: 0;
+    background: #1e293b;
+    color: #e2e8f0;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.btn-icon:hover {
+    background: #334155;
+    color: #ffffff;
+}
+
+.erd-viewport {
+    background: #0b1120;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    padding: 16px;
+    overflow: auto;
+    max-height: 460px;
+    min-height: 220px;
+}
+
+.erd-diagram {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-width: 100%;
+}
+
+.erd-diagram svg {
+    display: block;
+    height: auto;
+}
+
+/* Fullscreen ERD Modal */
+
+.erd-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.85);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.erd-modal.hidden {
+    display: none;
+}
+
+.erd-modal-content {
+    background: #111827;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    width: 100%;
+    height: 100%;
+    max-width: 1500px;
+    max-height: 92vh;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.erd-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.erd-modal-header h3 {
+    color: #93c5fd;
+    margin: 0;
+}
+
+.erd-viewport-modal {
+    flex: 1;
+    max-height: none;
+}
+
+.btn-close-modal {
+    background: #7f1d1d;
+    border-color: #991b1b;
+    color: #fecaca;
+}
+
+.btn-close-modal:hover {
+    background: #991b1b;
+    color: #ffffff;
+}
+
+/* Query Results Chart View */
+
+.chart-view {
+    margin-top: 16px;
+}
+
+.chart-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+}
+
+.chart-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chart-canvas-wrapper {
+    position: relative;
+    height: 360px;
+    width: 100%;
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 14px;
+    padding: 16px;
+}
+
+/* ==========================
 RESPONSIVE
 ========================== */
 
@@ -720,6 +977,15 @@ RESPONSIVE
     
     #nextBtn {
         margin-left: auto;
+    }
+
+    .erd-modal {
+        padding: 10px;
+    }
+
+    .chart-canvas-wrapper {
+        height: 280px;
+        padding: 10px;
     }
 
 }

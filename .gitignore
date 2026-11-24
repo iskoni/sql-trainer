@@ -1,0 +1,11 @@
+# Backup archives
+*.zip
+
+# Development & verification helpers (not needed on GitHub Pages)
+check_empty.py
+exercises.json
+verify.html
+
+# OS artifacts
+.DS_Store
+Thumbs.db

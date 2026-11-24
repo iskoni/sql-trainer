@@ -163,12 +163,58 @@ href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-d
             <div id="schemaBox"
                  class="schema-box hidden">
 
-                <h4>Database Schema</h4>
+                <div class="schema-header">
 
-                <ul id="schemaList"
-                    class="schema-list">
+                    <h4>Database Schema</h4>
 
-                </ul>
+                    <div class="view-tabs" role="tablist">
+                        <button type="button" id="schemaListTab" class="tab-btn active">
+                            List View
+                        </button>
+                        <button type="button" id="schemaErdTab" class="tab-btn">
+                            Visual ERD
+                        </button>
+                    </div>
+
+                </div>
+
+                <div id="schemaListView">
+                    <ul id="schemaList"
+                        class="schema-list">
+
+                    </ul>
+                </div>
+
+                <div id="schemaErdView" class="hidden">
+
+                    <div class="erd-toolbar">
+                        <div class="erd-filter-group">
+                            <label for="erdScopeSelect">Scope:</label>
+                            <select id="erdScopeSelect" class="compact-select">
+                                <option value="relevant">Relevant to Exercise</option>
+                                <option value="all">All Tables</option>
+                                <option value="ecommerce">E-Commerce &amp; Sales</option>
+                                <option value="hr">HR &amp; Projects</option>
+                                <option value="analytics">Web &amp; IoT Analytics</option>
+                                <option value="library">Library &amp; Demographics</option>
+                            </select>
+                            <span id="erdMetaLabel" class="erd-meta-label"></span>
+                        </div>
+
+                        <div class="erd-zoom-controls">
+                            <button type="button" id="erdZoomOutBtn" class="btn-icon" title="Zoom Out">−</button>
+                            <span id="erdZoomLabel" class="erd-zoom-label">100%</span>
+                            <button type="button" id="erdZoomInBtn" class="btn-icon" title="Zoom In">+</button>
+                            <button type="button" id="erdZoomResetBtn" class="btn-icon" title="Reset Zoom">Reset</button>
+                            <button type="button" id="erdFullscreenBtn" class="btn-icon" title="Open Fullscreen ERD">⤢ Expand</button>
+                        </div>
+                    </div>
+
+                    <div id="erdViewport" class="erd-viewport">
+                        <div id="erdDiagram" class="erd-diagram"></div>
+                    </div>
+
+                </div>
 
             </div>
 
@@ -234,7 +280,22 @@ href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-d
 
         <section class="results">
 
-            <h3>Query Results</h3>
+            <div id="validationOutput"></div>
+
+            <div class="results-header">
+
+                <h3>Query Results</h3>
+
+                <div id="resultsTabs" class="view-tabs hidden" role="tablist">
+                    <button type="button" id="tableTabBtn" class="tab-btn active">
+                        Table
+                    </button>
+                    <button type="button" id="chartTabBtn" class="tab-btn">
+                        Chart
+                    </button>
+                </div>
+
+            </div>
 
             <div id="output">
 
@@ -242,10 +303,73 @@ href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-d
 
             </div>
 
+            <div id="chartView" class="chart-view hidden">
+
+                <div class="chart-toolbar">
+
+                    <div class="chart-control">
+                        <label for="chartTypeSelect">Type:</label>
+                        <select id="chartTypeSelect" class="compact-select">
+                            <option value="bar">Bar</option>
+                            <option value="line">Line</option>
+                            <option value="pie">Pie</option>
+                            <option value="doughnut">Doughnut</option>
+                        </select>
+                    </div>
+
+                    <div class="chart-control">
+                        <label for="chartXSelect">X-Axis:</label>
+                        <select id="chartXSelect" class="compact-select"></select>
+                    </div>
+
+                    <div class="chart-control">
+                        <label for="chartYSelect">Y-Axis:</label>
+                        <select id="chartYSelect" class="compact-select"></select>
+                    </div>
+
+                </div>
+
+                <div class="chart-canvas-wrapper">
+                    <canvas id="resultChartCanvas"></canvas>
+                </div>
+
+            </div>
+
         </section>
 
     </main>
 
+</div>
+
+<!-- FULLSCREEN ERD MODAL -->
+
+<div id="erdModal" class="erd-modal hidden" role="dialog" aria-modal="true" aria-label="Database Entity-Relationship Diagram">
+    <div class="erd-modal-content">
+        <div class="erd-modal-header">
+            <h3>Entity-Relationship Diagram</h3>
+            <div class="erd-toolbar-modal">
+                <select id="erdModalScopeSelect" class="compact-select">
+                    <option value="relevant">Relevant to Exercise</option>
+                    <option value="all">All Tables</option>
+                    <option value="ecommerce">E-Commerce &amp; Sales</option>
+                    <option value="hr">HR &amp; Projects</option>
+                    <option value="analytics">Web &amp; IoT Analytics</option>
+                    <option value="library">Library &amp; Demographics</option>
+                </select>
+                <span id="erdModalMetaLabel" class="erd-meta-label"></span>
+                <div class="erd-zoom-controls">
+                    <button type="button" id="erdModalZoomOutBtn" class="btn-icon" title="Zoom Out">−</button>
+                    <span id="erdModalZoomLabel" class="erd-zoom-label">100%</span>
+                    <button type="button" id="erdModalZoomInBtn" class="btn-icon" title="Zoom In">+</button>
+                    <button type="button" id="erdModalZoomResetBtn" class="btn-icon" title="Reset Zoom">Reset</button>
+                </div>
+                <button type="button" id="erdModalCloseBtn" class="btn-icon btn-close-modal" title="Close">✕</button>
+            </div>
+        </div>
+        <div id="erdModalViewport" class="erd-viewport erd-viewport-modal">
+            <div id="erdModalDiagram" class="erd-diagram"></div>
+        </div>
+    </div>
 </div>
 
 <!-- SQL.js -->
@@ -259,6 +383,11 @@ href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-d
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/display/placeholder.min.js"></script>
 
+<!-- Chart.js & Mermaid -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+
 <!-- APP -->
 
 <script src="js/database.js"></script>
@@ -269,6 +398,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-d
 <script src="js/exercises_proficient.js"></script>
 <script src="js/exercises_expert.js"></script>
 <script src="js/validator.js"></script>
+<script src="js/visualizer.js"></script>
 <script src="js/app.js"></script>
 
 </body>

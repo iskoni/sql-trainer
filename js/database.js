@@ -94,6 +94,97 @@ getSchema(){
 },
 
 /* ==========================
+   DETAILED SCHEMA & ERD METADATA
+   ========================== */
+
+getSchemaDetails(){
+
+    if(!this.db) return { tables: [], relations: [] };
+
+    const tableRows = this.db.exec(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY rowid;"
+    );
+
+    const tableNames = tableRows.length ? tableRows[0].values.map(r => r[0]) : [];
+
+    // Lookup map from singular/lower names to actual table name for convention-based FK inference
+    const nameMap = {};
+    tableNames.forEach(name => {
+        const lower = name.toLowerCase();
+        nameMap[lower] = name;
+        if(lower.endsWith("ies")){
+            nameMap[lower.slice(0, -3) + "y"] = name;
+        } else if(lower.endsWith("s")){
+            nameMap[lower.slice(0, -1)] = name;
+        }
+    });
+    if(nameMap["employees"]){
+        nameMap["manager"] = nameMap["employees"];
+    }
+
+    const tables = [];
+    const relations = [];
+    const seenRel = new Set();
+
+    tableNames.forEach(tableName => {
+
+        const escaped = tableName.replace(/"/g, '""');
+        const infoRes = this.db.exec(`PRAGMA table_info("${escaped}");`);
+        const fkRes = this.db.exec(`PRAGMA foreign_key_list("${escaped}");`);
+
+        const explicitFks = {};
+        if(fkRes.length){
+            fkRes[0].values.forEach(row => {
+                // PRAGMA foreign_key_list: [id, seq, table, from, to, ...]
+                explicitFks[row[3]] = { targetTable: row[2], targetCol: row[4] || "id" };
+            });
+        }
+
+        const columns = infoRes.length
+            ? infoRes[0].values.map(row => {
+                const colName = row[1];
+                const colType = (row[2] || "TEXT").split(/\s+/)[0].toUpperCase();
+                const isPK = row[5] > 0;
+                let fkTarget = explicitFks[colName] || null;
+
+                if(!fkTarget && colName.toLowerCase().endsWith("_id")){
+                    const prefix = colName.slice(0, -3).toLowerCase();
+                    if(nameMap[prefix]){
+                        fkTarget = { targetTable: nameMap[prefix], targetCol: "id" };
+                    }
+                }
+
+                if(fkTarget){
+                    const relKey = `${fkTarget.targetTable}->${tableName}:${colName}`;
+                    if(!seenRel.has(relKey)){
+                        seenRel.add(relKey);
+                        relations.push({
+                            from: fkTarget.targetTable,
+                            to: tableName,
+                            fromCol: fkTarget.targetCol,
+                            toCol: colName
+                        });
+                    }
+                }
+
+                return {
+                    name: colName,
+                    type: colType,
+                    isPK,
+                    isFK: Boolean(fkTarget)
+                };
+            })
+            : [];
+
+        tables.push({ name: tableName, columns });
+
+    });
+
+    return { tables, relations };
+
+},
+
+/* ==========================
    SEED DATABASE
    ========================== */
 
