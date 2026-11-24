@@ -439,7 +439,10 @@ INSERT INTO Orders VALUES
 (9,1,9,5,'2024-04-10'),
 (10,8,5,2,'2024-04-15'),
 (11,3,3,4,'2024-05-01'),
-(12,7,10,1,'2024-05-05');
+(12,7,10,1,'2024-05-05'),
+(13,9,1,1,'2024-01-22'),
+(14,9,2,1,'2024-01-22'),
+(15,2,2,1,'2024-02-10');
 
 INSERT INTO Suppliers VALUES
 (1,'TechCorp','USA',5),
@@ -449,9 +452,11 @@ INSERT INTO Suppliers VALUES
 
 INSERT INTO Inventory VALUES
 (1,1,50),
+(1,2,35),
 (2,2,120),
 (3,2,200),
 (4,1,30),
+(4,4,25),
 (5,3,80),
 (6,4,15),
 (7,3,100),
@@ -465,8 +470,10 @@ INSERT INTO Projects VALUES
 
 INSERT INTO Assignments VALUES
 (1,1,'Lead'),
+(1,2,'Advisor'),
 (2,1,'Developer'),
 (3,2,'Lead'),
+(3,3,'Architect'),
 (4,2,'Analyst'),
 (5,3,'Developer'),
 (9,3,'Tester'),
@@ -483,7 +490,9 @@ INSERT INTO Payments VALUES
 (7,6,160,'2024-04-05','Credit Card'),
 (8,2,60,'2024-04-12','Debit Card'),
 (9,8,300,'2024-04-20','PayPal'),
-(10,3,520,'2024-05-05','Credit Card');
+(10,3,520,'2024-05-05','Credit Card'),
+(11,2,40,'2024-04-25','PayPal'),
+(12,2,30,'2024-05-02','Debit Card');
 
 INSERT INTO SalesLog VALUES
 (1,1,5,'2024-01-10','Europe'),
@@ -500,7 +509,10 @@ INSERT INTO SalesLog VALUES
 (12,9,40,'2024-04-15','Asia'),
 (13,4,5,'2024-05-01','Europe'),
 (14,8,6,'2024-05-10','Americas'),
-(15,10,22,'2024-05-15','Europe');
+(15,10,22,'2024-05-15','Europe'),
+(16,1,10,'2023-06-15','Europe'),
+(17,2,25,'2023-09-20','Asia'),
+(18,3,20,'2023-11-10','Americas');
 
 INSERT INTO EmployeeHistory VALUES
 (1,1,65000,75000,'2022-01-15'),
@@ -536,13 +548,16 @@ INSERT INTO SensorReadings VALUES
 INSERT INTO Authors VALUES
 (1, 'Jane Austen', 'UK'),
 (2, 'Mark Twain', 'USA'),
-(3, 'Victor Hugo', 'France');
+(3, 'Victor Hugo', 'France'),
+(4, 'George Orwell', 'UK');
 
 INSERT INTO Books VALUES
 (1, 'Pride and Prejudice', 1, 1813),
 (2, 'Emma', 1, 1815),
 (3, 'The Adventures of Tom Sawyer', 2, 1876),
-(4, 'Les Misérables', 3, 1862);
+(4, 'Les Misérables', 3, 1862),
+(5, '1984', 4, 1949),
+(6, 'Animal Farm', 4, 1945);
 
 INSERT INTO BookLoans VALUES
 (1, 1, 1, '2024-01-10', '2024-01-24'),

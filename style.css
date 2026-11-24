@@ -38,6 +38,7 @@ SIDEBAR
 .sidebar{
 
     width:280px;
+    flex-shrink:0;
 
     background:#111827;
 
@@ -153,8 +154,29 @@ TOPBAR
 
 .topbar{
 
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
     margin-bottom:28px;
 
+}
+
+.topbar-title{
+    flex:1;
+    min-width:200px;
+}
+
+.progress-pill{
+    background:#1e293b;
+    border:1px solid #334155;
+    color:#93c5fd;
+    font-size:13px;
+    font-weight:600;
+    padding:8px 14px;
+    border-radius:999px;
+    white-space:nowrap;
 }
 
 .topbar h2{
@@ -393,6 +415,9 @@ SCHEMA BOX
 .schema-list{
 
     list-style:none;
+    max-height:320px;
+    overflow-y:auto;
+    padding-right:6px;
 
 }
 
@@ -559,6 +584,24 @@ FEEDBACK
 
 }
 
+.feedback-info{
+
+    background:#172554;
+
+    border-left:
+    5px solid #3b82f6;
+
+    color:#dbeafe;
+
+}
+
+.result-set-label{
+    font-size:13px;
+    font-weight:600;
+    color:#93c5fd;
+    margin:14px 0 6px;
+}
+
 #validationOutput .feedback-card{
 
     margin-top:0;
@@ -632,6 +675,10 @@ ACCORDION SIDEBAR
     color:#fff;
 }
 
+.topic-exercise-item.solved{
+    color:#86efac;
+}
+
 .topic-exercise-item.active{
     background:#2563eb !important;
     color:#fff !important;
@@ -668,6 +715,7 @@ HAMBURGER BUTTON
     color: #cbd5e1;
     font-size: 24px;
     padding: 8px;
+    margin-top: 0;
     margin-right: 16px;
     display: none;
 }

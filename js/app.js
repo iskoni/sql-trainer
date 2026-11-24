@@ -10,12 +10,75 @@ let currentDifficulty =
 let currentExercise =
     null;
 
+let solvedIds = new Set();
 let score = 0;
-let completed = 0;
+let isLoadingExercise = false;
 
 let exerciseIndex = 0;
 
 let filteredExercises = [];
+
+/* ==========================
+   HTML ESCAPING & PROGRESS
+   ========================== */
+
+function escapeHtml(value){
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+function loadProgress(){
+    try{
+        const raw = localStorage.getItem("sql_solved_ids");
+        if(raw){
+            const parsed = JSON.parse(raw);
+            if(Array.isArray(parsed)){
+                solvedIds = new Set(parsed);
+            }
+        }
+    } catch(_e){
+        solvedIds = new Set();
+    }
+    recalculateScore();
+}
+
+function saveProgress(){
+    try{
+        localStorage.setItem("sql_solved_ids", JSON.stringify([...solvedIds]));
+    } catch(_e){
+        // Ignore storage quota or private-mode restrictions
+    }
+}
+
+function recalculateScore(){
+    const all = window.Exercises || [];
+    score = all.reduce((sum, ex) => sum + (solvedIds.has(ex.id) ? (ex.xp || 0) : 0), 0);
+}
+
+function updateProgressUI(){
+    const summary = document.getElementById("progressSummary");
+    const total = (window.Exercises || []).length;
+    if(summary){
+        summary.textContent = `${solvedIds.size} / ${total} solved • ${score} XP`;
+    }
+
+    document.querySelectorAll(".topic-exercise-item").forEach(li => {
+        const idx = parseInt(li.dataset.index, 10);
+        const ex = filteredExercises[idx];
+        if(ex){
+            const isSolved = solvedIds.has(ex.id);
+            li.classList.toggle("solved", isSolved);
+            const baseTitle = ex.title || ("Exercise " + ex.id);
+            li.textContent = isSolved ? `✓ ${baseTitle}` : baseTitle;
+        }
+    });
+
+    updateCounter();
+}
 
 /* ==========================
    STARTUP
@@ -27,7 +90,21 @@ window.addEventListener(
 
     async ()=>{
 
-        await Database.init();
+        try{
+            await Database.init();
+        } catch(err){
+            const textEl = document.getElementById("exerciseText");
+            if(textEl){
+                textEl.textContent = "Failed to initialize SQLite engine. Please check your internet connection and reload.";
+            }
+            const outputEl = document.getElementById("output");
+            if(outputEl){
+                outputEl.innerHTML = `<div class="feedback-card feedback-error">❌ Database initialization error: ${escapeHtml(err.message || err)}</div>`;
+            }
+            return;
+        }
+
+        loadProgress();
 
         initializeEditor();
 
@@ -44,6 +121,8 @@ window.addEventListener(
         renderSchema();
 
         renderTablesList();
+
+        updateProgressUI();
 
     }
 
@@ -75,15 +154,29 @@ function initializeEditor(){
 
                 smartIndent:true,
 
-                autofocus:true
+                autofocus:true,
+
+                extraKeys:{
+                    "Ctrl-Enter": () => runExercise(),
+                    "Cmd-Enter": () => runExercise()
+                }
 
             }
 
         );
 
-    editor.on("change", () => {
-        if (currentExercise) {
-            localStorage.setItem(`sql_draft_${currentExercise.id}`, editor.getValue());
+    editor.on("change", (_cm, changeObj) => {
+        if(isLoadingExercise || !currentExercise) return;
+        if(changeObj && changeObj.origin === "setValue") return;
+        const val = editor.getValue();
+        try{
+            if(val === ""){
+                localStorage.removeItem(`sql_draft_${currentExercise.id}`);
+            } else {
+                localStorage.setItem(`sql_draft_${currentExercise.id}`, val);
+            }
+        } catch(_e){
+            // Ignore storage errors
         }
     });
 
@@ -160,11 +253,7 @@ function initializeButtons(){
     .addEventListener(
         "change",
         (e) => {
-            exerciseIndex = parseInt(e.target.value, 10);
-            Database.reset();
-            renderSchema();
-            loadExercise();
-            resetOutput("Ready.");
+            navigateToExercise(parseInt(e.target.value, 10));
         }
     );
 
@@ -328,17 +417,27 @@ function renderExercise(ex){
         ex.topic;
 
     const defaultCode = "-- Write your SQL here";
-    const savedDraft = localStorage.getItem(`sql_draft_${ex.id}`);
+    let savedDraft = null;
+    try{
+        savedDraft = localStorage.getItem(`sql_draft_${ex.id}`);
+    } catch(_e){
+        savedDraft = null;
+    }
 
-    if (savedDraft !== null && savedDraft !== "") {
-        editor.setValue(savedDraft);
-        editor.setOption("placeholder", "");
-    } else if (!ex.starterCode || ex.starterCode === defaultCode) {
-        editor.setValue("");
-        editor.setOption("placeholder", defaultCode);
-    } else {
-        editor.setValue(ex.starterCode);
-        editor.setOption("placeholder", "");
+    isLoadingExercise = true;
+    try{
+        if (savedDraft !== null && savedDraft !== "") {
+            editor.setValue(savedDraft);
+            editor.setOption("placeholder", "");
+        } else if (!ex.starterCode || ex.starterCode === defaultCode) {
+            editor.setValue("");
+            editor.setOption("placeholder", defaultCode);
+        } else {
+            editor.setValue(ex.starterCode);
+            editor.setOption("placeholder", "");
+        }
+    } finally {
+        isLoadingExercise = false;
     }
 
 }
@@ -350,12 +449,14 @@ function renderExercise(ex){
 function updateCounter(){
 
     const selector = document.getElementById("exerciseCounter");
+    if(!selector) return;
     selector.innerHTML = "";
     
     filteredExercises.forEach((ex, idx) => {
         const opt = document.createElement("option");
         opt.value = idx;
-        opt.textContent = (idx + 1) + " / " + filteredExercises.length + " - " + ex.topic;
+        const prefix = solvedIds.has(ex.id) ? "✓ " : "";
+        opt.textContent = prefix + (idx + 1) + " / " + filteredExercises.length + " - " + ex.topic;
         if (idx === exerciseIndex) {
             opt.selected = true;
         }
@@ -387,32 +488,42 @@ function resetOutput(message = "Ready."){
 
 async function runExercise(){
 
+    if(!currentExercise) return;
+
     const sql =
         editor.getValue();
 
-    /* For non-SQLite conceptual
-       exercises, show the query
-       but skip validation */
+    const cleanedSql = Validator.stripSqlComments(sql);
+    if(!cleanedSql){
+        resetOutput("Ready.");
+        renderValidation({
+            success: false,
+            message: "Please enter a SQL query before running."
+        });
+        return;
+    }
 
-    if(currentExercise.note &&
-       !currentExercise.expectedQuery){
+    /* Conceptual PostgreSQL / MySQL exercises: validate syntax without running in SQLite */
+
+    if(currentExercise.validationType === "conceptual"){
 
         resetOutput(`
-
-        <div class="feedback-card
-                     feedback-error">
-
-            This is a conceptual
-            exercise. The syntax
-            shown is not supported
-            in SQLite.
-
+        <div class="feedback-card feedback-info">
+            ℹ Conceptual PostgreSQL / MySQL exercise — evaluated by syntax check (not executed in SQLite).
         </div>
-
         `);
 
+        const validation = await Validator.validate(currentExercise, sql);
+        renderValidation(validation);
         return;
 
+    }
+
+    /* Execute on a clean database state matching the exercise's starting point */
+
+    Database.reset();
+    if(currentExercise.setupSQL){
+        Database.execute(currentExercise.setupSQL);
     }
 
     const result =
@@ -423,14 +534,9 @@ async function runExercise(){
     );
 
     const validation =
-
-        await Validator
-        .validate(
-
+        await Validator.validate(
             currentExercise,
-
             sql
-
         );
 
     renderValidation(
@@ -471,7 +577,7 @@ function renderExecution(result){
 
         <div class="feedback-card feedback-error">
 
-            ❌ ${result.error}
+            ❌ ${escapeHtml(result.error)}
 
         </div>
 
@@ -501,49 +607,36 @@ function renderExecution(result){
 
     }
 
-    const table =
-        result.data[0];
+    let html = "";
 
-    let html =
-        `<div class="table-responsive"><table class="result-table">`;
+    result.data.forEach((table, tableIdx) => {
+        if(result.data.length > 1){
+            html += `<p class="result-set-label">Result Set ${tableIdx + 1}</p>`;
+        }
 
-    html +=
-        "<thead><tr>";
+        html += `<div class="table-responsive"><table class="result-table"><thead><tr>`;
 
-    table.columns
-    .forEach(col=>{
-
-        html +=
-        `<th>${col}</th>`;
-
-    });
-
-    html +=
-        "</tr></thead><tbody>";
-
-    table.values
-    .forEach(row=>{
-
-        html += "<tr>";
-
-        row.forEach(cell=>{
-
-            html +=
-            `<td>${cell !== null ? cell : '<em>NULL</em>'}</td>`;
-
+        table.columns.forEach(col => {
+            html += `<th>${escapeHtml(col)}</th>`;
         });
 
-        html += "</tr>";
+        html += `</tr></thead><tbody>`;
 
+        table.values.forEach(row => {
+            html += "<tr>";
+            row.forEach(cell => {
+                html += `<td>${cell !== null && cell !== undefined ? escapeHtml(cell) : "<em>NULL</em>"}</td>`;
+            });
+            html += "</tr>";
+        });
+
+        html += `</tbody></table></div>`;
     });
-
-    html +=
-        "</tbody></table></div>";
 
     output.innerHTML =
         html;
 
-    Visualizer.prepareChartControls(table);
+    Visualizer.prepareChartControls(result.data[0]);
 
 }
 
@@ -565,10 +658,17 @@ function renderValidation(
         validation.success
     ){
 
-        score +=
-            currentExercise.xp;
+        const alreadySolved = solvedIds.has(currentExercise.id);
+        if(!alreadySolved){
+            solvedIds.add(currentExercise.id);
+            recalculateScore();
+            saveProgress();
+            updateProgressUI();
+        }
 
-        completed++;
+        const xpLine = alreadySolved
+            ? `XP: Already earned (+${currentExercise.xp} XP)`
+            : `XP: +${currentExercise.xp}`;
 
         validationOutput.innerHTML = `
 
@@ -578,17 +678,15 @@ function renderValidation(
 
             <br><br>
 
-            ${validation.message}
+            ${escapeHtml(validation.message)}
 
             <br><br>
 
-            XP:
-            +${currentExercise.xp}
+            ${xpLine}
 
             <br>
 
-            Score:
-            ${score}
+            Total Score: ${score} XP (${solvedIds.size} / ${(window.Exercises || []).length} solved)
 
         </div>
 
@@ -606,7 +704,7 @@ function renderValidation(
 
             <br><br>
 
-            ${validation.message}
+            ${escapeHtml(validation.message)}
 
         </div>
 
@@ -617,31 +715,43 @@ function renderValidation(
 }
 
 /* ==========================
-   NEXT EXERCISE
+   EXERCISE NAVIGATION
    ========================== */
 
-function nextExercise(){
+function navigateToExercise(index){
 
-    exerciseIndex++;
-
-    if(
-
-        exerciseIndex >=
-        filteredExercises.length
-
-    ){
-
-        exerciseIndex = 0;
-
-    }
+    exerciseIndex = index;
 
     Database.reset();
 
     renderSchema();
 
+    hideSchema();
+
     loadExercise();
 
     resetOutput("Ready.");
+
+    const sidebar = document.querySelector(".sidebar");
+    if(sidebar){
+        sidebar.classList.remove("open");
+    }
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+}
+
+/* ==========================
+   NEXT EXERCISE
+   ========================== */
+
+function nextExercise(){
+
+    const nextIndex = (exerciseIndex + 1) >= filteredExercises.length
+        ? 0
+        : exerciseIndex + 1;
+
+    navigateToExercise(nextIndex);
 
 }
 
@@ -666,9 +776,7 @@ function initializeDifficulty(){
 
             loadExerciseSet();
 
-            loadExercise();
-
-            resetOutput("Ready.");
+            navigateToExercise(0);
 
         }
 
@@ -711,17 +819,14 @@ function renderTopics(){
         
         filteredExercises.filter(e => e.topic === topic).forEach(ex => {
             const exLi = document.createElement("li");
-            exLi.textContent = ex.title || "Exercise " + ex.id;
-            exLi.className = "topic-exercise-item";
+            const isSolved = solvedIds.has(ex.id);
+            const baseTitle = ex.title || "Exercise " + ex.id;
+            exLi.textContent = isSolved ? `✓ ${baseTitle}` : baseTitle;
+            exLi.className = isSolved ? "topic-exercise-item solved" : "topic-exercise-item";
             exLi.dataset.index = filteredExercises.indexOf(ex);
             exLi.addEventListener("click", (e) => {
                 e.stopPropagation();
-                exerciseIndex = parseInt(exLi.dataset.index, 10);
-                Database.reset();
-                renderSchema();
-                loadExercise();
-                resetOutput("Ready.");
-                document.querySelector(".sidebar").classList.remove("open");
+                navigateToExercise(parseInt(exLi.dataset.index, 10));
             });
             exList.appendChild(exLi);
         });
@@ -812,6 +917,34 @@ function renderSchema(){
 
         list.appendChild(li);
 
+    });
+
+}
+
+function hideSchema(){
+
+    const box =
+        document
+        .getElementById(
+            "schemaBox"
+        );
+
+    const btn =
+        document
+        .getElementById(
+            "toggleSchemaBtn"
+        );
+
+    if(box){
+        box.classList.add("hidden");
+    }
+
+    if(btn){
+        btn.textContent = "Show Schema";
+    }
+
+    document.querySelectorAll("#schemaList li.schema-highlight").forEach(item => {
+        item.classList.remove("schema-highlight");
     });
 
 }
@@ -1040,9 +1173,18 @@ function renderTablesList(){
 
             // Switch to list view and highlight the clicked table
             document.getElementById("schemaListTab").click();
+            let highlighted = null;
             document.querySelectorAll("#schemaList li").forEach(item => {
-                item.classList.toggle("schema-highlight", item.dataset.table === tableName);
+                const isMatch = item.dataset.table === tableName;
+                item.classList.toggle("schema-highlight", isMatch);
+                if(isMatch) highlighted = item;
             });
+
+            const list = document.getElementById("schemaList");
+            if(highlighted && list){
+                list.scrollTop = Math.max(0, highlighted.offsetTop - list.offsetTop - 40);
+            }
+
             box.scrollIntoView({ behavior: "smooth", block: "nearest" });
             document.querySelector(".sidebar").classList.remove("open");
         });

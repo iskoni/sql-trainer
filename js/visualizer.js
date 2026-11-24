@@ -219,12 +219,32 @@ window.Visualizer = {
         typeSelect.value = analysis.defaultType;
     },
 
-    renderChart(){
-        if(typeof Chart === "undefined") return;
-        if(!this.currentTable || !this.currentAnalysis || !this.currentAnalysis.chartable) return;
+    escapeHtml(value){
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    },
 
+    renderChart(){
         const canvas = document.getElementById("resultChartCanvas");
         if(!canvas) return;
+        const wrapper = canvas.parentElement;
+        if(typeof Chart === "undefined"){
+            if(wrapper){
+                const existing = wrapper.querySelector(".chart-error-msg");
+                if(!existing){
+                    const p = document.createElement("p");
+                    p.className = "error chart-error-msg";
+                    p.textContent = "Chart.js failed to load. Check your internet connection.";
+                    wrapper.appendChild(p);
+                }
+            }
+            return;
+        }
+        if(!this.currentTable || !this.currentAnalysis || !this.currentAnalysis.chartable) return;
 
         const chartType = document.getElementById("chartTypeSelect").value;
         const xChoice = document.getElementById("chartXSelect").value;
@@ -508,7 +528,7 @@ window.Visualizer = {
             targetEl.innerHTML = svg;
             this.applyErdZoom(targetEl, zoomPercent);
         } catch(err){
-            targetEl.innerHTML = `<p class="error">Failed to render ERD: ${err.message}</p>`;
+            targetEl.innerHTML = `<p class="error">Failed to render ERD: ${this.escapeHtml(err.message)}</p>`;
         }
     }
 

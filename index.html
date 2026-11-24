@@ -11,7 +11,7 @@
 <title>SQL Trainer Platform</title>
 
 <meta name="description"
-      content="Practice SQL with 300+ interactive exercises across 5 difficulty levels. Master SELECT, JOIN, subqueries, window functions, DDL, DML and more.">
+      content="Practice SQL with 330 interactive exercises across 6 difficulty levels from Beginner to Expert. Master SELECT, JOIN, subqueries, window functions, CTEs, DDL, DML, and data analytics.">
 
 <link rel="stylesheet"
       href="style.css">
@@ -106,7 +106,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-d
 
             <button id="mobileMenuBtn" class="hamburger-btn">☰</button>
 
-            <div>
+            <div class="topbar-title">
 
                 <h2>SQL Playground</h2>
 
@@ -114,6 +114,10 @@ href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-d
                     Practice SQL against a live browser database.
                 </p>
 
+            </div>
+
+            <div id="progressSummary" class="progress-pill" aria-live="polite">
+                0 / 0 solved • 0 XP
             </div>
 
         </header>
@@ -237,7 +241,8 @@ href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-d
             <div class="action-row">
 
                 <button id="runBtn"
-                        class="btn btn-primary">
+                        class="btn btn-primary"
+                        title="Run Query (Ctrl+Enter)">
 
                     ▶ Run
 
